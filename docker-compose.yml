@@ -3,15 +3,17 @@ services:
     build: ../model-service
     ports:
       - "5010:5010"
-  frontend:
+    environment:
+      - MODEL_URL=https://github.com/remla2025-team16/model-training/releases/download/v1.0.0/sentiment-model.pkl
+  app-frontend:
     build:
-      context: ../app-frontend
+      context: ../app/app-frontend
       dockerfile: Dockerfile
     ports:
       - '3000:3000'
   app-service:
     build: 
-      context: ../app-service
+      context: ../app/app-service
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
