@@ -12,7 +12,7 @@ The Docker Compose file defines the following services:
 | ----------------- | ------------------ | ----------- | --------------------------------------------- |
 | **model-service** | `../model-service` | `5010:5010` | *(none)*                                      |
 | **app-service**   | `../app-service`   | `8080:8080` | `MODEL_SERVICE_URL=http://model-service:5010` |
-| **frontend**      | `../app-frontend`  | `3000:3000` | *(none)*                                      |
+| **app-frontend**      | `../app-frontend`  | `3000:3000` | *(none)*                                      |
 
 * **model-service**: Hosts the sentiment analysis REST API on port **5010**.
 * **app-service**: Provides the application backend on port **8080**, configured to call `model-service`.
@@ -27,10 +27,11 @@ The Docker Compose file defines the following services:
 * Clone all related repositories in a single parent directory:
 
   ```
-  ├── app-frontend/
-  ├── app-service/
-  ├── model-service/
-  └── operation-repo/
+   ├── app
+   │   ├── app-frontend
+   │   └── app-service
+   ├── model-service
+   └── operation-repo
   ```
 
 ---
@@ -78,7 +79,6 @@ This Compose setup satisfies the A1 assignment by:
 ## File Reference
 
 * **`docker-compose.yml`**: Defines all services and their orchestration.
-* **`.env.example`** (optional): Template for environment variables if extended.
 
 ---
 
