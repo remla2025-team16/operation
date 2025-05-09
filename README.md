@@ -81,8 +81,15 @@ This Compose setup satisfies the A1 assignment by:
 * **`docker-compose.yml`**: Defines all services and their orchestration.
 
 ---
+## Infra Automation (Ansible)
 
-## Next Steps
+All infrastructure provisioning and Kubernetes setup are defined under [`ansible/`](./ansible):
 
-* Extend this repository with CI/CD workflows (`.github/workflows/`), Kubernetes manifests, or Helm charts for production deployments.
-* Add monitoring, logging, and secrets management as needed.
+- **Setup & Provisioning**: Launch VMs via Vagrant and run Ansible playbooks.  
+- **Playbooks**: `general.yaml`, `ctrl.yaml`, `node.yaml`  
+- **Quickstart**:
+  ```bash
+  cd ansible
+  export WORKERS=2
+  vagrant up --provision=virtualbox
+  ```
