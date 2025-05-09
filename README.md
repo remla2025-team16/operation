@@ -1,6 +1,6 @@
 # Operations
 
-This repository contains the deployment and orchestration configuration for the A1 assignment. It enables you to spin up all components of the application (model-service, app-service, and frontend) with a single command.
+This repository contains the deployment and orchestration configuration for the A1 assignment. It enables you to spin up all components of the application (model-service, app-service, and frontend) with a single command. The personal contribution can be seen from `ACTIVITY.md`.
 
 ---
 
