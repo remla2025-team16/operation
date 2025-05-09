@@ -1,0 +1,10 @@
+# /etc/hosts – managed by Ansible
+127.0.0.1   localhost
+
+{% for host in groups['ctrl'] %}
+{{ hostvars[host].ansible_host }}   {{ host }}
+{% endfor %}
+
+{% for host in groups['nodes'] %}
+{{ hostvars[host].ansible_host }}   {{ host }}
+{% endfor %}
