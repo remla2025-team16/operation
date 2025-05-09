@@ -4,7 +4,7 @@ services:
     ports:
       - "5010:5010"
     environment:
-      - MODEL_URL=https://github.com/remla2025-team16/model-training/releases/download/v1.0.0/sentiment-model.pkl
+      - MODEL_URL=${MODEL_URL}
   app-frontend:
     build:
       context: ../app/app-frontend
@@ -18,4 +18,4 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - MODEL_SERVICE_URL=http://model-service:5010
+      - MODEL_SERVICE_URL=${MODEL_SERVICE_URL}
