@@ -94,6 +94,11 @@
         update_cache: yes
 
     # Step 11: Configure Containerd
+    - name: Create containerd service
+      ansible.builtin.service:
+        name: containerd
+        state: started
+
     - name: Generate default containerd config
       command: containerd config default
       register: containerd_config
@@ -133,8 +138,8 @@
         state: restarted
         enabled: yes
 
-  #step 12    
-    - name: Enable and start kubelet
+    #Step 12: Kubelet
+    - name: Enable kubelet
       ansible.builtin.service:
         name: kubelet
         state: started
