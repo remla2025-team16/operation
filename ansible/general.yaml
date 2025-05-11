@@ -120,7 +120,6 @@
         path: /etc/containerd/config.toml
         regexp: 'sandbox_image =.*'
         line: 'sandbox_image = "registry.k8s.io/pause:3.10"'
-
     
     - name: Set SystemdCgroup = true
       lineinfile:
@@ -133,4 +132,10 @@
         name: containerd
         state: restarted
         enabled: yes
-    
+
+  #step 12    
+    - name: Enable and start kubelet
+      ansible.builtin.service:
+        name: kubelet
+        state: started
+        enabled: yes
