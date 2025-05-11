@@ -1,0 +1,42 @@
+---
+- name: Setup base
+  hosts: all
+  become: true
+  tasks:
+
+    - name: STEP 5 - Disable swap
+      shell: swapoff -a
+
+    - name: Remove swap entry from /etc/fstab
+      lineinfile:
+        path: /etc/fstab
+        regexp: '^\s*[^#]\S+\s+swap\s'
+        state: absent
+
+    - name: STEP 6 - br_netfilter
+      copy:
+        dest: /etc/modules-load.d/k8s.conf
+        content: |
+          overlay
+          br_netfilter
+
+    - name: Load br_netfilter module now
+      modprobe:
+        name: br_netfilter
+        state: present
+
+    - name: STEP 7 - IPv4 forwarding
+      sysctl:
+        name: "{{ item.key }}"
+        value: "{{ item.value }}"
+        state: present
+        reload: yes
+      loop:
+        - { key: net.bridge.bridge-nf-call-ip6tables, value: 1 }
+        - { key: net.bridge.bridge-nf-call-iptables, value: 1 }
+        - { key: net.ipv4.ip_forward, value: 1 }
+
+    - name: STEP 8 - static /etc/hosts file
+      copy:
+        src: ../hosts
+        dest: /etc/hosts
