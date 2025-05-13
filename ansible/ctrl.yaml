@@ -1,0 +1,158 @@
+- hosts: ctrl
+  become: true
+  vars:
+    apiserver_ip: 192.168.56.100
+    pod_network_cidr: 10.244.0.0/16
+
+    k8s_version: v1.32.4                 
+    image_repo:  registry.k8s.io
+    flannel_version: "0.26.7"
+    flannel_iface: "eth1"
+    cri_socket:  unix:///var/run/containerd/containerd.sock
+
+  tasks:
+  - name: Ensure containerd is running
+    systemd:
+      name: containerd
+      state: started
+      enabled: yes
+
+  - name: Configure crictl
+    copy:
+      dest: /etc/crictl.yaml
+      content: |
+        runtime-endpoint: "{{ cri_socket }}"
+        image-endpoint:  "{{ cri_socket }}"
+        timeout: 10
+        debug: false
+      mode: 0644
+
+  - name: Pre-pull control-plane images {{ k8s_version }}
+    shell: |
+      kubeadm config images list \
+        --image-repository {{ image_repo }} \
+        --kubernetes-version {{ k8s_version }} |
+      xargs -I {} crictl pull {}
+    args:
+      executable: /bin/bash
+
+  # step 13: Init cluster
+  - name: Check if cluster already initialised
+    stat:
+      path: /etc/kubernetes/admin.conf
+    register: kubeconfig
+
+  - name: Render minimal kubeadm-config
+    copy:
+      dest: /tmp/kubeadm-config.yaml
+      content: |
+        apiVersion: kubeadm.k8s.io/v1beta3
+        kind: ClusterConfiguration
+        kubernetesVersion: "{{ k8s_version }}"
+        imageRepository:  "{{ image_repo }}"
+        networking:
+          podSubnet: "{{ pod_network_cidr }}"
+        apiServer:
+          certSANs:
+            - "{{ apiserver_ip }}"
+        ---
+        apiVersion: kubeadm.k8s.io/v1beta3
+        kind: InitConfiguration
+        nodeRegistration:
+          name: ctrl
+          criSocket: "{{ cri_socket }}"
+    when: not kubeconfig.stat.exists
+
+  - name: Initialise control plane
+    command: kubeadm init --config /tmp/kubeadm-config.yaml
+    when: not kubeconfig.stat.exists
+    register: init_out
+
+  - name: Wait for API-Server
+    wait_for:
+      host: "{{ apiserver_ip }}"
+      port: 6443
+      state: started
+      timeout: 300
+      delay: 5
+
+  # step 14: Setup kubectl 
+  - name: Ensure ~/.kube for vagrant
+    file:
+      path: /home/vagrant/.kube
+      state: directory
+      owner: vagrant
+      group: vagrant
+      mode: 0700
+
+  - name: Copy admin.conf to vagrant user
+    copy:
+      src: /etc/kubernetes/admin.conf
+      dest: /home/vagrant/.kube/config
+      owner: vagrant
+      group: vagrant
+      mode: 0644
+      remote_src: yes
+
+  - name: Add KUBECONFIG to .bashrc (idempotent)
+    lineinfile:
+      path: /home/vagrant/.bashrc
+      line: 'export KUBECONFIG=$HOME/.kube/config'
+      insertafter: EOF
+    become_user: vagrant
+
+  - name: Expose admin.conf for host use
+    copy:
+      src: /etc/kubernetes/admin.conf
+      dest: /vagrant/admin.conf
+      mode: 0644
+      remote_src: yes
+
+  # step 15 Create Pod network 
+  - name: Download Flannel manifest
+    get_url:
+      url: "https://raw.githubusercontent.com/flannel-io/flannel/v{{ flannel_version }}/Documentation/kube-flannel.yml"
+      dest: /tmp/kube-flannel.yml
+      mode: 0644
+
+  - name: Patch Flannel --iface
+    replace:
+      path: /tmp/kube-flannel.yml
+      regexp: '(- --iface=)[^\s]+'
+      replace: '\1{{ flannel_iface }}'
+
+  - name: Apply Flannel CNI
+    shell: |
+      kubectl apply -f /tmp/kube-flannel.yml --kubeconfig /etc/kubernetes/admin.conf
+    register: flannel_apply
+    retries: 5
+    delay: 15
+    until: flannel_apply.rc == 0
+
+  # step 16 Install Helm 
+  - name: Helm apt key
+    apt_key:
+      url: https://baltocdn.com/helm/signing.asc
+      state: present
+
+  - name: Helm repo
+    apt_repository:
+      repo: "deb https://baltocdn.com/helm/stable/debian/ all main"
+      state: present
+
+  - name: Install Helm
+    apt:
+      name: helm
+      state: present
+      update_cache: yes
+
+  # step 17 Install Helm Diff
+  - name: Install helm-diff plugin
+    become: false
+    environment:
+      HOME: /home/vagrant
+    shell: |
+      helm plugin list | grep -q diff || \
+      helm plugin install https://github.com/databus23/helm-diff
+    args:
+      creates: /home/vagrant/.local/share/helm/plugins/helm-diff

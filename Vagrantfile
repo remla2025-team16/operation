@@ -8,7 +8,7 @@ Vagrant.configure("2") do |config|
     ctrl.vm.network "private_network", ip: "192.168.56.100", virtualbox__intnet: "cluster"
     ctrl.vm.provider "virtualbox" do |vb|
       vb.memory = 4096
-      vb.cpus = 1
+      vb.cpus = 2
     end
   end
 
@@ -27,7 +27,7 @@ Vagrant.configure("2") do |config|
   
   # Provisioning
   config.vm.provision "ansible" do |ansible|
-    ansible.playbook = "ansible/general.yaml"
+    ansible.playbook = "ansible/site.yaml"
     ansible.inventory_path = "ansible/inventory.cfg"
     ansible.extra_vars = { "workers": workers }
     ansible.limit = "all"
