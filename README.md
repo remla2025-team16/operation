@@ -196,7 +196,7 @@ All infrastructure provisioning and Kubernetes setup are defined under [`ansible
    ### Step 22: Kubernetes Dashboard
 
    ## Authors & Contributions
-
-   - System preparation, Security (Steps 2, 5–8): Gyum Cho
+   - System preparation
+   - Security 
    - Vagrant + Ansible structure: 
    - Kubernetes provisioning: 
