@@ -1,0 +1,42 @@
+---
+- name: Initialize Kubernetes Controller
+  hosts: ctrl
+  become: yes
+  tasks:
+    - name: Check if Kubernetes has not yet been initialized
+      stat:
+        path: /etc/kubernetes/admin.conf
+      register: kubeadm_init_status
+
+    - name: Initialize Kubernetes Cluster
+      shell: |
+        kubeadm init \
+          --apiserver-advertise-address=192.168.56.100 \
+          --node-name ctrl \
+          --pod-network-cidr=10.244.0.0/16
+      when: not kubeadm_init_status.stat.exists
+
+    - name: Ensure the Kubernetes config directory exists
+      file:
+        path: /home/vagrant/.kube
+        state: directory
+        mode: '0755'
+        owner: vagrant
+        group: vagrant
+
+    - name: Copy the kubernetes config file to vagrant user
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/vagrant/.kube/config
+        owner: vagrant
+        group: vagrant
+        mode: '0644'
+
+    - name: Copy the kubernetes config file to admin file
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /vagrant/admin.conf
+        owner: vagrant
+        group: vagrant
+        mode: '0644'
+
