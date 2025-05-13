@@ -1,119 +1,124 @@
 ---
-- hosts: all
+- hosts: ctrl
   become: yes
 
   tasks:
-    # Step 20 - MetalLB
-    - name: Apply MetalLB manifests
-      command: kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.9/config/manifests/metallb-native.yaml
+  # Step 20
+  - name: Install MetalLB core manifests
+    ansible.builtin.command: >
+      kubectl apply
+      -f https://raw.githubusercontent.com/metallb/metallb/v0.14.9/config/manifests/metallb-native.yaml
+    args:
+      creates: /var/lib/metallb.installed
 
-    - name: Wait for MetalLB controller to be ready
-      command: >
-        kubectl wait -n metallb-system -l app=metallb,component=controller
-        --for=condition=ready pod --timeout=60s
+  - name: Wait for MetalLB controller
+    ansible.builtin.command: >
+      kubectl wait -n metallb-system
+      --for=condition=ready
+      -l app=metallb,component=controller
+      pod --timeout=60s
+    changed_when: false
 
-    - name: Configure MetalLB IPAddressPool
-      copy:
-        dest: /tmp/metallb-IP-config.yaml
-        content: |
-          apiVersion: metallb.io/v1beta1
-          kind: IPAddressPool
-          metadata:
-            name: default-pool
-            namespace: metallb-system
-          spec:
-            addresses:
-            - 192.168.56.90-192.168.56.99
+  - name: Declare address IPAddressPool
+    kubernetes.core.k8s:
+      kubeconfig: /home/vagrant/.kube/config
+      state: present
+      definition:
+        apiVersion: metallb.io/v1beta1
+        kind: IPAddressPool
+        metadata: 
+          name: remla-pool
+          namespace: metallb-system
+        spec:
+          addresses: ["192.168.56.90-192.168.56.99"]
 
-    - name: Apply MetalLB IPAddressPool
-      command: kubectl apply -f /tmp/metallb-IP-config.yaml
+  - name: Enable L2 advertisement
+    kubernetes.core.k8s:
+      kubeconfig: /home/vagrant/.kube/config
+      state: present
+      definition:
+        apiVersion: metallb.io/v1beta1
+        kind: L2Advertisement
+        metadata: 
+          name: remla-adv
+          namespace: metallb-system
+        spec:
+          ipAddressPools: ["remla-pool"]
 
-    - name: Configure MetalLB L2Advertisement
-      copy:
-        dest: /tmp/metallb-L2-config.yaml
-        content: |
-          apiVersion: metallb.io/v1beta1
-          kind: L2Advertisement
-          metadata:
-            name: l2-ad
-            namespace: metallb-system
+  # Step 21
+  - name: Ensure ingress-nginx repo exists
+    ansible.builtin.command: helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+    changed_when: false
+    failed_when: false
 
-    - name: Apply MetalLB L2Advertisement
-      command: kubectl apply -f /tmp/metallb-L2-config.yaml
+  - name: Update local Helm cache
+    ansible.builtin.command: helm repo update
+    changed_when: false
 
-    # Step 21 - Ingress NGINX
-    - name: Add ingress-nginx Helm repo
-      command: helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+  - name: Install ingress controller
+    ansible.builtin.command: >
+      helm upgrade --install edge-ingress ingress-nginx/ingress-nginx
+      --namespace ingress-nginx --create-namespace
 
-    - name: Update Helm repos
-      command: helm repo update
+  # Step 22
+  - name: Add Kubernetes Dashboard Helm repo
+    ansible.builtin.command: helm repo add kdash https://kubernetes.github.io/dashboard
+    changed_when: false
+    failed_when: false
 
-    - name: Install ingress-nginx
-      command: >
-        helm install ingress-nginx ingress-nginx/ingress-nginx
-        --set controller.service.type=LoadBalancer
-        --set controller.service.loadBalancerIP=192.168.56.91
+  - name: Install dashboard
+    ansible.builtin.command: >
+      helm upgrade --install kdash kdash/kubernetes-dashboard
+      --namespace kdash --create-namespace
+      --set app.ingress.enabled=false
 
-    # Step 22 - Dashboard
-    - name: Add Kubernetes Dashboard Helm repo
-      command: helm repo add kubernetes-dashboard https://kubernetes.github.io/dashboard/
-
-    - name: Deploy Kubernetes Dashboard via Helm
-      command: >
-        helm upgrade --install kubernetes-dashboard kubernetes-dashboard/kubernetes-dashboard
-        --create-namespace --namespace kubernetes-dashboard
-
-    - name: Create ServiceAccount and ClusterRoleBinding for admin
-      copy:
-        dest: /tmp/dashboard-admin.yaml
-        content: |
-          apiVersion: v1
-          kind: ServiceAccount
-          metadata:
-            name: admin-user
-            namespace: kubernetes-dashboard
-          ---
-          apiVersion: rbac.authorization.k8s.io/v1
-          kind: ClusterRoleBinding
-          metadata:
-            name: admin-user
-          roleRef:
-            apiGroup: rbac.authorization.k8s.io
-            kind: ClusterRole
-            name: cluster-admin
-          subjects:
+  - name: Admin ServiceAccount and binding
+    kubernetes.core.k8s:
+      kubeconfig: /home/vagrant/.kube/config
+      state: present
+      definition: |
+        apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+          name: dash-admin
+          namespace: kdash
+        ---
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRoleBinding
+        metadata:
+          name: dash-admin-crb
+        subjects:
           - kind: ServiceAccount
-            name: admin-user
-            namespace: kubernetes-dashboard
+            name: dash-admin
+            namespace: kdash
+        roleRef:
+          kind: ClusterRole
+          name: cluster-admin
+          apiGroup: rbac.authorization.k8s.io
 
-    - name: Apply Dashboard ServiceAccount config
-      command: kubectl apply -f /tmp/dashboard-admin.yaml
-
-    - name: Create Ingress for dashboard
-      copy:
-        dest: /tmp/dashboard-ingress.yaml
-        content: |
-          apiVersion: networking.k8s.io/v1
-          kind: Ingress
-          metadata:
-            name: kubernetes-dashboard
-            namespace: kubernetes-dashboard
-            annotations:
-              nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-          spec:
-            ingressClassName: nginx
-            rules:
+  - name: Expose dashboard via HTTPS Ingress
+    kubernetes.core.k8s:
+      kubeconfig: /home/vagrant/.kube/config
+      state: present
+      definition:
+        apiVersion: networking.k8s.io/v1
+        kind: Ingress
+        metadata:
+          name: dash-external
+          namespace: kdash
+          annotations:
+            nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+        spec:
+          ingressClassName: nginx
+          rules:
             - host: dashboard.local
               http:
                 paths:
-                - path: /
-                  pathType: Prefix
-                  backend:
-                    service:
-                      name: kubernetes-dashboard
-                      port:
-                        number: 443
-
-    - name: Apply Dashboard Ingress
-      command: kubectl apply -f /tmp/dashboard-ingress.yaml
+                  - path: /
+                    pathType: Prefix
+                    backend:
+                      service:
+                        name: kdash-kubernetes-dashboard
+                        port: 
+                          number: 443
 
