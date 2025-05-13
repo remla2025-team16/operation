@@ -84,12 +84,16 @@ This Compose setup satisfies the A1 assignment by:
 ## Infra Automation (Ansible)
 
 All infrastructure provisioning and Kubernetes setup are defined under [`ansible/`](./ansible):
-
-- **Setup & Provisioning**: Launch VMs via Vagrant and run Ansible playbooks.  
+  
 - **Playbooks**: `general.yaml`, `ctrl.yaml`, `node.yaml`  
+- **Setup:** 
+   1. put the public key under `/keys` folder and add your path to `ssh_key_files` in `general.yaml`
+   2. running `vagrant ssh-config <VM_NAME>` to get the `IdentityFile` and add them to `inventory.cfg` as `ansible_private_key_file` path
 - **Quickstart**:
   ```bash
-  cd ansible
   export WORKERS=2
-  vagrant up --provision=virtualbox
+  vagrant up --no-provision # create+boot
+  vagrant provision 
   ```
+- **Quick Recovery**
+   - If you get unreachable error, first use `vagrant ssh-config <VM_NAME>` to check whether the running `ansible_port` matches those registered in `inventory.cfg`

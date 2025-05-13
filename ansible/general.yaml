@@ -2,7 +2,18 @@
 - name: Setup base
   hosts: all
   become: true
+  vars:
+    ssh_key_files:
+      - "../keys/anyan.pub"
+      # add more keys here
+
   tasks:
+    - name: Register SSH keys
+      ansible.posix.authorized_key:
+        user: vagrant
+        key: "{{ lookup('file', item) }}"
+        state: present
+      loop: "{{ ssh_key_files }}"
 
     - name: STEP 5 - Disable swap
       shell: swapoff -a
@@ -41,10 +52,6 @@
         src: ../hosts
         dest: /etc/hosts
 
-# ansible/general.yaml
-- hosts: all
-  become: yes # Most of these tasks require root privileges
-  tasks:
     # Step 9: Add Kubernetes repository
     - name: Update apt cache
       ansible.builtin.apt:
@@ -85,11 +92,11 @@
     - name: Install Kubernetes components
       ansible.builtin.apt:
         name:
-          - containerd=1.7.24
-          - runc=1.1.12
-          - kubelet=1.32.4
-          - kubeadm=1.32.4
-          - kubectl=1.32.4
+          - containerd=1.7.24-*
+          - runc=1.1.12-*
+          - kubelet=1.32.4-*
+          - kubeadm=1.32.4-*
+          - kubectl=1.32.4-*
         state: present
         update_cache: yes
 
@@ -99,20 +106,22 @@
         name: containerd
         state: started
 
-    - name: Generate default containerd config
-      command: containerd config default
-      register: containerd_config
-      changed_when: false  
+    - name: Ensure /etc/containerd directory exists
+      file:
+        path: /etc/containerd
+        state: directory
 
-    - name: Write default containerd config
+    - name: Dump default containerd config if missing
+      command: containerd config default
+      args:
+        creates: /etc/containerd/config.toml
+      register: containerd_default_cfg
+
+    - name: Write default config to /etc/containerd/config.toml
       copy:
-        content: "{{ containerd_config.stdout }}"
+        content: "{{ containerd_default_cfg.stdout }}"
         dest: /etc/containerd/config.toml
-        force: no
-        owner: root
-        group: root
-        mode: '0644'
-      notify: Restart containerd
+      when: containerd_default_cfg is changed
 
     - name: Set disable_apparmor = true
       lineinfile:
