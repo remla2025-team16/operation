@@ -123,33 +123,39 @@
         dest: /etc/containerd/config.toml
       when: containerd_default_cfg is changed
 
-    - name: Set disable_apparmor = true
+    - name: Disable AppArmor in containerd CRI plugin
       lineinfile:
         path: /etc/containerd/config.toml
-        regexp: 'disable_apparmor =.*'
-        line: 'disable_apparmor = true'
+        regexp: '^\s*disable_apparmor\s*='
+        line: '      disable_apparmor = true'
+        insertafter: '^\[plugins\."io.containerd.grpc.v1.cri"\]'
+      notify: Restart containerd
 
-    - name: Set sandbox_image to registry.k8s.io/pause:3.10
+    - name: Set pause sandbox image in containerd CRI plugin
       lineinfile:
         path: /etc/containerd/config.toml
-        regexp: 'sandbox_image =.*'
-        line: 'sandbox_image = "registry.k8s.io/pause:3.10"'
+        regexp: '^\s*sandbox_image\s*='
+        line: '      sandbox_image = "registry.k8s.io/pause:3.10"'
+        insertafter: '^\[plugins\."io.containerd.grpc.v1.cri"\]'
+      notify: Restart containerd
+
+    - name: Enable systemd cgroup driver for runc in containerd
+      blockinfile:
+        path: /etc/containerd/config.toml
+        marker: "# {mark} ANSIBLE RUNC OPTIONS"
+        insertafter: '^\[plugins\."io.containerd.grpc.v1.cri"\.containerd\.runtimes\.runc\.options\]'
+        block: |
+          SystemdCgroup = true
+      notify: Restart containerd
     
-    - name: Set SystemdCgroup = true
-      lineinfile:
-        path: /etc/containerd/config.toml
-        regexp: 'SystemdCgroup =.*'
-        line: 'SystemdCgroup = true'
-
+    - name: Enable and start kubelet
+      ansible.builtin.service:
+        name: kubelet
+        enabled: yes
+        state: started
+    
+  handlers:
     - name: Restart containerd
       ansible.builtin.service:
         name: containerd
         state: restarted
-        enabled: yes
-
-    #Step 12: Kubelet
-    - name: Enable kubelet
-      ansible.builtin.service:
-        name: kubelet
-        state: started
-        enabled: yes
