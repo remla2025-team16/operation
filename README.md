@@ -97,3 +97,106 @@ All infrastructure provisioning and Kubernetes setup are defined under [`ansible
   ```
 - **Quick Recovery**
    - If you get unreachable error, first use `vagrant ssh-config <VM_NAME>` to check whether the running `ansible_port` matches those registered in `inventory.cfg`
+
+   ## Assignment 2 - kubernetes Provisioning (NEW SECTION STARTS HERE)
+
+   In Assignment 2, we set up the infrastructure required to host a multi-node Kubernetes cluster. This includes using **Vagrant**, **VirtualBox**, and **Ansible** to automate configuration of three Ubuntu-based virtual machines.
+
+   ### Infrastructure Setup with Vagrant
+
+   We use Vagrant to:
+
+   - `ctrl` (Controller Node): 192.168.56.100
+   - `node-1` (Worker Node): 192.168.56.101
+   - `node-2` (Worker Node): 192.168.56.102
+
+   Each VM has:
+   - 2 network interfaces (NAT + private host-only)
+   - A static IP on the private network
+
+   #### How to Start
+
+   ```bash
+   cd operation
+   vagrant up
+   ```
+
+   In case of SSH CRASH
+
+   ```bash
+   vagrant destroy -r
+   vagrant node-1 up
+   vagrant node-2 up
+   ```
+
+   ### Ansible Provisioning
+
+   The Ansible playbook `ansible/general.yaml` applies the following configurations to all VMs:
+
+   | Step | Task |
+   |   5  | Disable swap (`swapoff -a`) and remove from `/etc/fstab` |
+   |   6  | Load `br_netfilter` kernel module and persist it |
+   |   7  | Enable IPv4 forwarding and bridge sysctl options |
+   |   8  | Copy a custom `/etc/hosts` file to each VM |
+
+   An inventory file (`ansible/inventory.cfg`) ensures each VM is properly targeted via SSH.
+
+   #### Verification Commands
+
+   You can SSH into each VM using:
+
+   ```bash
+   vagrant ssh ctrl  
+   ```
+
+   From there, you can check:
+
+   ```bash
+   free -h                       
+   lsmod | grep br_netfilter     
+   sysctl net.ipv4.ip_forward    
+   cat /etc/hosts                
+   ```
+
+   ---
+
+   ## Kubernetes Cluster Setup 
+   ### Step 9–12: Install Kubernetes Components
+   - Installed `containerd`, `kubeadm`, `kubectl`, `kubelet`
+   - Configured `crictl.yaml` to use containerd
+   - Enabled and started the `containerd` service
+
+   ### Step 13-14: Initialize Control Plane
+   - Initialized the Kubernetes cluster using `kubeadm init`
+   - Used pod network CIDR: `10.244.0.0/16`
+   - Prepared `/etc/kubernetes/admin.conf` for kubectl access
+
+   ### Step 15: Configure Pod Network with Flannel
+   - Installed Flannel CNI plugin using:
+
+   ```bash
+   kubectl apply -f https://github.com/flannel-io/flannel/releases/download/v0.26.7/kube-flannel.yml
+   ```
+
+   ### Step 16-17 : Helm Installation
+   - Helm installed on controller
+
+   ### Step 18–19: Worker Node Join
+
+   - Worker nodes joined using token from controller
+   - Implemented in `ansible/node.yaml` using `kubeadm token create --print-join-command`
+
+   ### Step 20: Install MetalLB
+
+   - MetalLB core manifests applied
+   - IP pool configured: `192.168.56.90-192.168.56.99`
+
+   ### Step 21: Ingress-NGINX 
+
+   ### Step 22: Kubernetes Dashboard
+
+   ## Authors & Contributions
+
+   - System preparation, Security (Steps 2, 5–8): Gyum Cho
+   - Vagrant + Ansible structure: 
+   - Kubernetes provisioning: 
