@@ -1,4 +1,7 @@
-- Commit by **Sloppyan** at **2025-05-06T18:25:21Z**: [d9afe59](https://github.com/remla2025-team16/app/commit/d9afe59063db772c996caa47483e6103a98b2640): chore: update README
-- Commit by **Sloppyan** at **2025-05-05T19:05:27Z**: [6d2d720](https://github.com/remla2025-team16/app/commit/6d2d72097a9c4269dd4cc776645a833dd19f0466): fix: change the directory of app
-- Commit by **Sloppyan** at **2025-05-05T12:53:21Z**: [e34ebc9](https://github.com/remla2025-team16/app/commit/e34ebc9ab11d16e2e1fe7fab07a605ee79913200): Initial commit
-- Commit by **Sloppyan** at **2025-05-02T21:05:41Z**: [157f57e](https://github.com/remla2025-team16/app/commit/157f57e7601f8aed67ec00f1e9459f1a1e1c7492): Create operation.yml
+-- Anyan: --
+- Created PR: https://github.com/remla2025-team16/operation/pull/1
+- Approved PR: https://github.com/remla2025-team16/operation/pull/1
+- Created PR: https://github.com/remla2025-team16/operation/pull/2
+- Approved PR: https://github.com/remla2025-team16/operation/pull/2
+- Created PR: https://github.com/remla2025-team16/operation/pull/3
+- Approved PR: https://github.com/remla2025-team16/operation/pull/3
