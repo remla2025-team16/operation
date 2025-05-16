@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "multi-service.fullname" . }}-model-service
+  labels:
+    app: {{ include "multi-service.name" . }}-model-service
+spec:
+  replicas: {{ .Values.modelService.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "multi-service.name" . }}-model-service
+  template:
+    metadata:
+      labels:
+        app: {{ include "multi-service.name" . }}-model-service
+    spec:
+      containers:
+        - name: model-service
+          image: "{{ .Values.modelService.image.repository }}:{{ .Values.modelService.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.modelService.containerPort }}
+          env:
+            - name: MODEL_URL
+              value: "{{ .Values.modelService.env.modelUrl }}"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "multi-service.fullname" . }}-app-frontend
+  labels:
+    app: {{ include "multi-service.name" . }}-app-frontend
+spec:
+  replicas: {{ .Values.appFrontend.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "multi-service.name" . }}-app-frontend
+  template:
+    metadata:
+      labels:
+        app: {{ include "multi-service.name" . }}-app-frontend
+    spec:
+      containers:
+        - name: app-frontend
+          image: "{{ .Values.appFrontend.image.repository }}:{{ .Values.appFrontend.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.appFrontend.containerPort }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "multi-service.fullname" . }}-app-service
+  labels:
+    app: {{ include "multi-service.name" . }}-app-service
+spec:
+  replicas: {{ .Values.appService.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "multi-service.name" . }}-app-service
+  template:
+    metadata:
+      labels:
+        app: {{ include "multi-service.name" . }}-app-service
+    spec:
+      containers:
+        - name: app-service
+          image: "{{ .Values.appService.image.repository }}:{{ .Values.appService.image.tag }}"
+          ports:
+            - containerPort: {{ .Values.appService.containerPort }}
+          env:
+            - name: MODEL_SERVICE_URL
+              value: "{{ .Values.appService.env.modelServiceUrl }}"
