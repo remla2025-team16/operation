@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-app
+  template:
+    metadata:
+      labels:
+        app: my-app
+    spec:
+      containers:
+        - name: app-service
+          image: gyumcho/app-service:latest
+          ports:
+            - containerPort: 8080
+          env:
+            - name: MODEL_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: model_service_url
+
+        - name: app-frontend
+          image: gyumcho/app-frontend:latest
+          ports:
+            - containerPort: 3000
+
+        - name: model-service
+          image: gyumcho/model-service:latest
+          ports:
+            - containerPort: 5010
+          env:
+            - name: MODEL_PATH
+              value: model.pkl
+            - name: MODEL_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: model_url
