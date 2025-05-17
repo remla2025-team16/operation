@@ -1,0 +1,30 @@
+modelService:
+  replicaCount: 1
+  image:
+    repository: ../../model-service
+    tag: latest
+  containerPort: 5010
+  service:
+    port: 5010
+  env:
+    modelUrl: "https://github.com/remla2025-team16/model-training/releases/download/v1.0.0/sentiment-model.pkl"
+
+appFrontend:
+  replicaCount: 1
+  image:
+    repository: ../../app/app-frontend
+    tag: latest
+  containerPort: 3000
+  service:
+    port: 3000
+
+appService:
+  replicaCount: 1
+  image:
+    repository: ../../app/app-service
+    tag: latest
+  containerPort: 8080
+  service:
+    port: 8080
+  env:
+    modelServiceUrl: "http://model-service:5010"
