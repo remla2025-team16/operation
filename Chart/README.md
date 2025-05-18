@@ -71,5 +71,5 @@ helm uninstall <release-name>
   ```
 - You can see the rendered Kubernets resource without submitting to the cluster by
   ```bash
-  elm install <release-name> . --dry-run --debug
+  helm install <release-name> . --dry-run --debug
   ```

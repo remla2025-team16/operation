@@ -1,30 +1,39 @@
-modelService:
-  replicaCount: 1
-  image:
-    repository: ../../model-service
-    tag: latest
-  containerPort: 5010
-  service:
-    port: 5010
-  env:
-    modelUrl: "https://github.com/remla2025-team16/model-training/releases/download/v1.0.0/sentiment-model.pkl"
+services:
+  - name: model-service
+    enabled: true
+    path: /model
+    replicaCount: 1
+    image:
+      repository: ghcr.io/remla2025-team16/model-service
+      tag: latest
+    containerPort: 5010
+    servicePort: 5010
+    env:
+      MODEL_URL: "https://github.com/remla2025-team16/model-training/releases/download/v1.0.0/sentiment-model.pkl"
 
-appFrontend:
-  replicaCount: 1
-  image:
-    repository: ../../app/app-frontend
-    tag: latest
-  containerPort: 3000
-  service:
-    port: 3000
+  - name: app-service
+    enabled: true
+    path: /api
+    replicaCount: 1
+    image:
+      repository: ghcr.io/remla2025-team16/app/app-service
+      tag: latest
+    containerPort: 8080
+    servicePort: 8080
+    env:
+      MODEL_SERVICE_URL: "http://{{ include \"my-app.fullname\" . }}-model-service:5010"
 
-appService:
-  replicaCount: 1
-  image:
-    repository: ../../app/app-service
-    tag: latest
-  containerPort: 8080
-  service:
-    port: 8080
-  env:
-    modelServiceUrl: "http://model-service:5010"
+  - name: app-frontend
+    enabled: true
+    path: /
+    replicaCount: 1
+    image:
+      repository: ghcr.io/remla2025-team16/app/app-frontend
+      tag: latest
+    containerPort: 3000
+    servicePort: 3000
+    # no env block
+
+ingress:
+  enabled: true
+  host: myapp.local
