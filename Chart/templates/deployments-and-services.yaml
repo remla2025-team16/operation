@@ -1,0 +1,50 @@
+{{- range .Values.services }}
+{{- if .enabled }}
+---
+# --- Deployment for {{ .name }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "my-app.fullname" $ }}-{{ .name }}
+  labels:
+    {{- include "my-app.labels" $ | nindent 4 }}
+spec:
+  replicas: {{ .replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "my-app.fullname" $ }}-{{ .name }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "my-app.fullname" $ }}-{{ .name }}
+    spec:
+      containers:
+        - name: {{ .name }}
+          image: "{{ .image.repository }}:{{ .image.tag }}"
+          ports:
+            - containerPort: {{ .containerPort }}
+          {{- if .env }}
+          env:
+            {{- range $key, $val := .env }}
+            - name: {{ $key }}
+              value: "{{ $val }}"
+            {{- end }}
+          {{- end }}
+---
+# --- Service for {{ .name }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "my-app.fullname" $ }}-{{ .name }}
+  labels:
+    {{- include "my-app.labels" $ | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ include "my-app.fullname" $ }}-{{ .name }}
+  ports:
+    - name: http
+      port: {{ .servicePort }}
+      targetPort: {{ .containerPort }}
+{{- end }}
+{{- end }}

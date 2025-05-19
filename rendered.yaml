@@ -1,0 +1,159 @@
+---
+# Source: my-app/templates/deployments-and-services.yaml
+# --- Service for app-frontend
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-release-app-frontend
+  labels:
+    app: my-release-app-frontend
+spec:
+  type: ClusterIP
+  selector:
+    app: my-release-app-frontend
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+---
+# Source: my-app/templates/deployments-and-services.yaml
+# --- Deployment for model-service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-release-model-service
+  labels:
+    app: my-release-model-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-release-model-service
+  template:
+    metadata:
+      labels:
+        app: my-release-model-service
+    spec:
+      containers:
+        - name: model-service
+          image: "ghcr.io/remla2025-team16/model-service:latest"
+          ports:
+            - containerPort: 5010
+          env:
+            - name: MODEL_URL
+              value: "https://github.com/remla2025-team16/model-training/releases/download/v1.0.0/sentiment-model.pkl"
+---
+# Source: my-app/templates/deployments-and-services.yaml
+# --- Service for model-service
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-release-model-service
+  labels:
+    app: my-release-model-service
+spec:
+  type: ClusterIP
+  selector:
+    app: my-release-model-service
+  ports:
+    - name: http
+      port: 5010
+      targetPort: 5010
+# --- Deployment for app-service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-release-app-service
+  labels:
+    app: my-release-app-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-release-app-service
+  template:
+    metadata:
+      labels:
+        app: my-release-app-service
+    spec:
+      containers:
+        - name: app-service
+          image: "ghcr.io/remla2025-team16/app/app-service:latest"
+          ports:
+            - containerPort: 8080
+          env:
+            - name: MODEL_SERVICE_URL
+              value: "http://model-service:5010"
+---
+# Source: my-app/templates/deployments-and-services.yaml
+# --- Service for app-service
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-release-app-service
+  labels:
+    app: my-release-app-service
+spec:
+  type: ClusterIP
+  selector:
+    app: my-release-app-service
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+# --- Deployment for app-frontend
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-release-app-frontend
+  labels:
+    app: my-release-app-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-release-app-frontend
+  template:
+    metadata:
+      labels:
+        app: my-release-app-frontend
+    spec:
+      containers:
+        - name: app-frontend
+          image: "ghcr.io/remla2025-team16/app/app-frontend:latest"
+          ports:
+            - containerPort: 3000
+---
+# Source: my-app/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: my-release-my-app-ingress
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+  - host: myapp.local
+    http:
+      paths:
+      - path: /model
+        pathType: Prefix
+        backend:
+          service:
+            name: my-release-model-service
+            port:
+              number: 5010
+      - path: /api
+        pathType: Prefix
+        backend:
+          service:
+            name: my-release-app-service
+            port:
+              number: 8080
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: my-release-app-frontend
+            port:
+              number: 3000

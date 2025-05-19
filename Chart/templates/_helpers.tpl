@@ -1,13 +1,17 @@
-{{/*
-Define the chart name.
-*/}}
-{{- define "multi-service.name" -}}
-{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
+{{/* Chart name */}}
+{{- define "my-app.name" -}}
+{{- default .Chart.Name .Values.nameOverride -}}
 {{- end -}}
 
-{{/*
-Generate a fully qualified name that includes the release name.
-*/}}
-{{- define "multi-service.fullname" -}}
-{{- printf "%s-%s" .Release.Name (include "multi-service.name" .) | trunc 63 | trimSuffix "-" -}}
+{{/* Fullname: release-name + chart name */}}
+{{- define "my-app.fullname" -}}
+{{- printf "%s-%s" .Release.Name (include "my-app.name" .) | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{/* Common labels */}}
+{{- define "my-app.labels" -}}
+app.kubernetes.io/name: "{{ include "my-app.name" . }}"
+app.kubernetes.io/instance: "{{ .Release.Name }}"
+app.kubernetes.io/version: "{{ .Chart.AppVersion }}"
+app.kubernetes.io/managed-by: "{{ .Release.Service }}"
 {{- end -}}
