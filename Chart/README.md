@@ -31,7 +31,24 @@ To deploy the services using this Helm Chart, follow these steps:
    ```bash
    kubectl get all -l app=<release-name>
    ```
+## Testing
 
+1. **Map the custom domain locally**
+   Edit your hosts file (`/etc/hosts` on Linux/macOS or `C:\Windows\System32\drivers\etc\hosts` on Windows) and add:
+   ```bash
+   127.0.0.1   myapp.local
+   ```
+
+2. **Port-forward the Ingress controller**
+   ```bash
+   kubectl port-forward -n ingress-nginx svc/ingress-nginx-controller 8080:80
+   ```
+
+3. **Open the app in your browser**
+   Navigate to the app-frontend by:
+   ```bash
+   http://myapp.local:8080
+   ```
 ## Customization
 
 You can customize the deployment by modifying the `values.yaml` file or by passing parameters directly via the `--set` flag. Below are some examples:

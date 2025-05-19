@@ -23,11 +23,15 @@ spec:
           image: "{{ .image.repository }}:{{ .image.tag }}"
           ports:
             - containerPort: {{ .containerPort }}
-          {{- if .env }}
+          {{- $root := $ }}
+          {{- if $root.Values.configMap.data }}
           env:
-            {{- range $key, $val := .env }}
+            {{- range $key, $val := $root.Values.configMap.data  }}
             - name: {{ $key }}
-              value: "{{ $val }}"
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "my-app.fullname" $ }}-config
+                  key: {{ $key }}
             {{- end }}
           {{- end }}
 ---
