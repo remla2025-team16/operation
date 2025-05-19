@@ -200,3 +200,59 @@ All infrastructure provisioning and Kubernetes setup are defined under [`ansible
    - Security 
    - Vagrant + Ansible structure: 
    - Kubernetes provisioning: 
+
+   ## Assignment 3 - Operate and Monitor Kubernetes
+   This section covers the conversion of the existing Docker Compose setup into a Kubernetes deployment with `Deployment`, `Service`, `Ingress`, `ConfigMap`, and `Secret` objects. The three application components (`model-service`, `app-service`, `app-frontend`) are all deployed and managed through Kubernetes resources
+
+   ###  Docker Image Preparation
+   Before deploying to Kubernetes, make sure the images are built and pushed to DockerHub:
+
+   ```bash
+   cd model-service
+   docker build -t <your-dockerhub-username>/model-service:latest .
+   docker push <your-dockerhub-username>/model-service:latest
+
+   cd ../app/app-frontend
+   docker build -t <your-dockerhub-username>/app-frontend:latest .
+   docker push <your-dockerhub-username>/app-frontend:latest
+
+   cd ../app/app-service
+   docker build -t <your-dockerhub-username>/app-service:latest .
+   docker push <your-dockerhub-username>/app-service:latest
+   ```
+
+   ###  Apply Kubernetes Resources
+   After building and pushing your images, apply all Kubernetes resources using:
+
+   ```bash
+   kubectl apply -f k8s/configmap.yaml
+   kubectl apply -f k8s/secret.yaml
+   kubectl apply -f k8s/deployment.yaml
+   kubectl apply -f k8s/service.yaml
+   kubectl apply -f k8s/ingress.yaml
+   ```
+
+   
+   ### Verify Deployment
+   ```bash
+   kubectl get pods
+   kubectl get svc
+   ```
+
+   If a pod fails, inspect with:
+
+   ```bash
+   kubectl describe pod <pod-name>
+   kubectl logs <pod-name> -c model-service
+   ```
+
+   If needed:
+
+   ```bash
+   kubectl delete pod -l app=my-app
+   ```
+
+   ### Run the App Locally via Port Forwarding
+   ```
+   kubectl port-forward svc/my-app 8080:80
+   ```
