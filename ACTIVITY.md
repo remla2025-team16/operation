@@ -48,6 +48,7 @@ Approved PR:
 - https://github.com/remla2025-team16/app/pull/3
 
 -- Gyum: --
+
 https://github.com/remla2025-team16/operation/activity?ref=main&actor=Gyum-Portfolio
 1. Worked on the security, Convert Docker Compose to Kubernetes YAML files
 deployment.yaml
