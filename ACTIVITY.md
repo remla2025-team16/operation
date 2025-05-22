@@ -16,6 +16,8 @@ Direct commited to 2 repos, activites can be seen from
 - https://github.com/remla2025-team16/model-training/blob/main/ACTIVITY.md (Related to A1)
 Build a Helm Chart based on Module 1 outputs- Template parameters in values.yaml for ports, service names, etc.- Ensure Chart supports multiple installs with prefixing
 
+
+
 # Week 3:
 -- Anyan: --
 
@@ -32,6 +34,16 @@ Approved PR:
 -- Gyum: --
 - Configure the second network interface with a static IP; 
 - Disable swap; load br_netfilter; enable IPv4 forwarding;
+
+--pratham--
+
+- A2 - Steps 9 - 12 
+    - Commits
+        - [45dd2ae](https://github.com/remla2025-team16/operation/commit/45dd2aed5f6c4f98f794a9490fbd5ce2903f50c2)
+        - [c8cbe23](https://github.com/remla2025-team16/operation/commit/c8cbe2338e78c71d4ea578e57f7d5eb657345a7e)
+        - [c9edfb3](https://github.com/remla2025-team16/operation/commit/c9edfb3ff3664d85330d4b179fa9e4b5960eca69)
+        - [b3e387e](https://github.com/remla2025-team16/operation/commit/b3e387ed914810d7d5dbb8072034a98659c4dbf7)
+        - [a4c1e57](https://github.com/remla2025-team16/operation/commit/a4c1e576f8d4ec53d952246801b5ec4625c857e9)
 
 
 # Week 4:
@@ -63,6 +75,18 @@ secret.yaml
 2. Set up the Kubernetes deployment
 3. Configure Ingress, Services, and Exposures
 
+
+
+--pratham--
+
+- a3 -  prometheus metrics
+    - Commit: Operation
+        - [f00fcac](https://github.com/remla2025-team16/operation/commit/f00fcacb0c4555c514816466e4f6419a53a56fe9)
+    - PR: App
+        - [#3](https://github.com/remla2025-team16/app/pull/3)
+    - Approved PR: 
+        - Operation - [#4](https://github.com/remla2025-team16/operation/pull/4)
+        - Lib - Ml - [#3](https://github.com/remla2025-team16/lib-ml/pull/3)
 # Week 5:
 -- Anyan: --
 
