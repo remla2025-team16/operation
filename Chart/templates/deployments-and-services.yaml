@@ -42,6 +42,9 @@ metadata:
   name: {{ include "my-app.fullname" $ }}-{{ .name }}
   labels:
     {{- include "my-app.labels" $ | nindent 4 }}
+    {{- if eq .name "app-service" }}
+    component: app-service
+    {{- end }}
 spec:
   type: ClusterIP
   selector:

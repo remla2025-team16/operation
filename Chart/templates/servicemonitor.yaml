@@ -3,17 +3,19 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: {{ include "my-app.fullname" . }}-servicemonitor
+  namespace: {{ .Values.serviceMonitor.prometheusNamespace | default "default" }}
   labels:
     {{- include "my-app.labels" . | nindent 4 }}
+    release: prometheus
 spec:
   selector:
     matchLabels:
-      app: {{ include "my-app.fullname" $ }}-{{ .name }}
+      component: app-service
   namespaceSelector:
     matchNames:
-      - {{ include "my-app.fullname" $ }}-{{ .name }}
+      - {{ .Release.Namespace }}
   endpoints:
     - port: http
-      path: /api/metrics
+      path: /metrics
       interval: {{ .Values.serviceMonitor.interval | default "15s" }}
 {{- end }}
