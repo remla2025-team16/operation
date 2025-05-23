@@ -7,16 +7,12 @@ No PR but directly committed to 6 repos, activites can be seen from:
 - https://github.com/remla2025-team16/model-service/blob/main/ACTIVITY.md (Related to A1)
 - https://github.com/remla2025-team16/model-training/blob/main/ACTIVITY.md (Related to A1)
 - https://github.com/remla2025-team16/lib-version/blob/main/ACTIVITY.md (Related to A1)
-- https://github.com/remla2025-team16/model-training/blob/main/ACTIVITY.md (Related to A1)
 **Please note that Sloppyan = Anyan**
 
 -- Gyum: --
 Direct commited to 2 repos, activites can be seen from
 - https://github.com/remla2025-team16/lib-ml/blob/main/ACTIVITY.md (Related to A1)\
 - https://github.com/remla2025-team16/model-training/blob/main/ACTIVITY.md (Related to A1)
-Build a Helm Chart based on Module 1 outputs- Template parameters in values.yaml for ports, service names, etc.- Ensure Chart supports multiple installs with prefixing
-
-
 
 # Week 3:
 -- Anyan: --
