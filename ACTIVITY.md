@@ -94,3 +94,11 @@ Created PR:
 Approved PR:
 - https://github.com/remla2025-team16/lib-ml/pull/7
 
+-- Pratham: --
+
+Created PR:
+- https://github.com/remla2025-team16/model-training/pull/5 (Related to A4)
+- https://github.com/remla2025-team16/lib-ml/pull/7 (Related to A4)
+
+Approved PR:
+- https://github.com/remla2025-team16/model-training/pull/4
