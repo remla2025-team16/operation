@@ -87,4 +87,8 @@ secret.yaml
 -- Anyan: --
 
 Created PR:  
+- https://github.com/remla2025-team16/lib-ml/pull/4 (Related to A4)
+- https://github.com/remla2025-team16/model-training/pull/4 (Related to A4)
+- https://github.com/remla2025-team16/lib-ml/pull/6 (Related to A1)
 Approved PR:
+- https://github.com/remla2025-team16/lib-ml/pull/7
