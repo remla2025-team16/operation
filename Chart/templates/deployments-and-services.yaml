@@ -1,7 +1,53 @@
 {{- range .Values.services }}
+{{- $svcName := .name }}
 {{- if .enabled }}
+{{- if .versions }}
+  {{- range .versions }}
 ---
-# --- Deployment for {{ .name }}
+# --- Deployment for app-service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "my-app.fullname" $ }}-{{ $svcName }}-{{ .name }}
+  labels:
+    {{- include "my-app.labels" $ | nindent 4 }}
+    version: {{ .name }}
+spec:
+  replicas: {{ .replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "my-app.fullname" $ }}-{{ $svcName }}
+      version: {{ .name }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "my-app.fullname" $ }}-{{ $svcName}}
+        version: {{ .name }}
+    spec:
+      containers:
+        - name: {{ $svcName }}-{{ .name }}
+          image: "{{ .image.repository }}:{{ .image.tag }}"
+          ports:
+            - containerPort: {{ .containerPort }}
+          {{- $root := $ }}
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          {{- if $root.Values.configMap.data }}
+            {{- range $key, $val := $root.Values.configMap.data  }}
+            - name: {{ $key }}
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "my-app.fullname" $ }}-config
+                  key: {{ $key }}
+            {{- end }}
+          {{- end }}
+  {{- end }}
+{{- else }}
+---
+# --- Deployment for other services
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -34,6 +80,7 @@ spec:
                   key: {{ $key }}
             {{- end }}
           {{- end }}
+{{- end }}
 ---
 # --- Service for {{ .name }}
 apiVersion: v1
