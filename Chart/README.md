@@ -9,6 +9,12 @@ Before using this Helm Chart, ensure the following prerequisites are met:
 1. **Kubernetes Cluster**: A **running** Kubernetes cluster (e.g., Minikube, Kind, or a cloud provider).
 2. **Helm Installed**: Helm CLI installed on your local machine. You can install Helm by following the [official guide](https://helm.sh/docs/intro/install/).
 3. **kubectl Installed**: Ensure `kubectl` is installed and configured to communicate with your Kubernetes cluster.
+4. **Prometheus Operator Installed**
+   ```bash
+   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+   helm repo update
+   helm install prometheus prometheus-community/kube-prometheus-stack
+   ```
 
 ## Installation
 
@@ -88,5 +94,31 @@ helm uninstall <release-name>
   ```
 - You can see the rendered Kubernets resource without submitting to the cluster by
   ```bash
-  helm install <release-name> . --dry-run --debug
+  helm install <release-name> . -n <namespace> --dry-run --debug
   ```
+
+# Istio Configuration
+
+1. Deploy using
+   ```bash
+   helm install <installation_name> . -n <namespace>
+   ```
+2. check Istio resource by runing
+   ```bash
+   # Gateway
+   kubectl get gateway -n <namespace>
+
+   # DestinationRule
+   kubectl get destinationrule -n <namespace>
+
+   # VirtualService
+   kubectl get virtualservice -n <namespace>
+
+   # Deployment/Pod
+   kubectl get pods -n <namespace>
+   ```
+3. Test Istio gateway by running
+   ```bash
+   kubectl port-forward -n istio-system svc/istio-ingressgateway 8080:80
+   ```
+4. Test the canary release by executing the `app-service-version` on http://localhost:8080/apidocs/
