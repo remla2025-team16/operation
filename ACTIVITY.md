@@ -102,3 +102,11 @@ Created PR:
 
 Approved PR:
 - https://github.com/remla2025-team16/model-training/pull/4
+
+-- Gyum --
+Aprroved PR:
+- https://github.com/remla2025-team16/lib-ml/pull/4
+
+I mainly worked for clean up the Legacy codes from 2 left members. 
+Only for this activity I lean on commits than folks and merge it. It will never repeat
+- https://github.com/remla2025-team16/model-training/commit/e63ce3149b0e3af3733211e52e0557b1f82bcaa7
