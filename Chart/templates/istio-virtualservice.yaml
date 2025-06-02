@@ -1,0 +1,42 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ printf "%s-entry" (include "my-app.fullname" .) }}-app-service
+  namespace: {{ .Values.istio.gateway.namespace }}
+spec:
+  gateways:
+  - {{ .Values.istio.gateway.name }}
+  hosts:
+  - {{ quote .Values.istio.gateway.host }}  
+
+  http:
+  {{- if .Values.istio.sticky.enabled }}
+  - match:
+    - uri:
+        prefix: "/"
+      headers:
+        cookie:
+          regex: ".*{{ .Values.istio.sticky.cookieName }}=.*"
+    route:
+    - destination:
+        host: {{ printf "%s-%s" (include "my-app.fullname" .) "app-service" }}
+        subset: v2
+      weight: {{ .Values.istio.canary.weightV2 }}
+    - destination:
+        host: {{ printf "%s-%s" (include "my-app.fullname" .) "app-service" }}
+        subset: v1
+      weight: {{ .Values.istio.canary.weightV1 }}
+  {{- end }}
+
+  - match:
+    - uri:
+        prefix: "/"
+    route:
+    - destination:
+        host: {{ printf "%s-%s" (include "my-app.fullname" .) "app-service" }}
+        subset: v1
+      weight: {{ .Values.istio.canary.weightV1 }}
+    - destination:
+        host: {{ printf "%s-%s" (include "my-app.fullname" .) "app-service" }}
+        subset: v2
+      weight: {{ .Values.istio.canary.weightV2 }}
