@@ -71,8 +71,10 @@ istio:
     enabled: true
     cookieName: user-id
     
-  rateLimit:     
+  rateLimit:
     enabled: true
     unit: "1m"
-    maxRequestsPerSecond: 10
-    burstCapacity: 5
+    requestsPerUnit: 10
+    matchHeader: "user-id"
+    rateLimitName: per-user-limit
+
