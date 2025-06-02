@@ -30,8 +30,12 @@ spec:
           ports:
             - containerPort: {{ .containerPort }}
           {{- $root := $ }}
-          {{- if $root.Values.configMap.data }}
           env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          {{- if $root.Values.configMap.data }}
             {{- range $key, $val := $root.Values.configMap.data  }}
             - name: {{ $key }}
               valueFrom:
