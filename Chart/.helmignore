@@ -1,0 +1,5 @@
+*.bin
+*.jar
+*.tar.gz
+/tmp/
+/charts/
