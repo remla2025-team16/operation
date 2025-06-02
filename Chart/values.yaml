@@ -12,12 +12,21 @@ services:
   - name: app-service
     enabled: true
     path: /api
-    replicaCount: 1
-    image:
-      repository: ghcr.io/remla2025-team16/app/app-service
-      tag: latest
-    containerPort: 8080
+    versions:
+      - name: v1
+        replicaCount: 1
+        image:
+          repository: ghcr.io/remla2025-team16/app/app-service
+          tag: v1.0.0
+        containerPort: 8080
+      - name: v2
+        replicaCount: 1
+        image:
+          repository: ghcr.io/remla2025-team16/app/app-service
+          tag: v2.0.0
+        containerPort: 8080
     servicePort: 8080
+    containerPort: 8080
   
   - name: app-frontend
     enabled: true
@@ -36,10 +45,28 @@ configMap:
     MODEL_URL: "https://github.com/remla2025-team16/model-training/releases/download/v1.0.0/sentiment-model.pkl"
 
 ingress:
-  enabled: true
+  enabled: false
   host: myapp.local
 
 serviceMonitor:
   enabled: true
   release: prometheus
   interval: 15s
+
+istio:
+  gateway:
+    name: my-gateway
+    namespace: test-istio # default
+    port: 80
+    host: "*"
+  
+  app:
+    versionLabelKey: version
+
+  canary:
+    weightV1: 90
+    weightV2: 10
+  
+  sticky:
+    enabled: true
+    cookieName: user-id
