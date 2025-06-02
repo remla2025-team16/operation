@@ -1,0 +1,14 @@
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: {{ printf "%s-dr" (include "my-app.fullname" .) }}-app-service
+  namespace: {{ .Values.istio.gateway.namespace }}
+spec:
+  host: {{ printf "%s-%s" (include "my-app.fullname" .) "app-service" }}
+  subsets:
+  - name: v1
+    labels:
+      {{ .Values.istio.app.versionLabelKey }}: v1
+  - name: v2
+    labels:
+      {{ .Values.istio.app.versionLabelKey }}: v2
