@@ -1,0 +1,16 @@
+{{- if .Values.istio.rateLimit.enabled }}
+apiVersion: config.internal.istio.io/v1alpha1
+kind: RateLimitConfig
+metadata:
+  name: {{ .Values.istio.rateLimit.rateLimitName }}
+  namespace: {{ .Values.istio.gateway.namespace }}
+spec:
+  rules:
+  - actions:
+    - requestHeaders:
+        headerName: "{{ .Values.istio.rateLimit.matchHeader }}"
+        descriptorKey: "{{ .Values.istio.rateLimit.matchHeader }}"
+    limits:
+    - requestsPerUnit: {{ .Values.istio.rateLimit.requestsPerUnit }}
+      unit: {{ .Values.istio.rateLimit.unit }}
+

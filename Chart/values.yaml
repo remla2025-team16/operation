@@ -70,3 +70,9 @@ istio:
   sticky:
     enabled: true
     cookieName: user-id
+    
+  rateLimit:     
+    enabled: true
+    unit: "1m"
+    maxRequestsPerSecond: 10
+    burstCapacity: 5
