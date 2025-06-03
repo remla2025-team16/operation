@@ -110,3 +110,14 @@ Aprroved PR:
 I mainly worked for clean up the Legacy codes from 2 left members. 
 Only for this activity I lean on commits than folks and merge it. It will never repeat
 - https://github.com/remla2025-team16/model-training/commit/e63ce3149b0e3af3733211e52e0557b1f82bcaa7
+
+# Week 6
+
+-- Anyan --
+
+Created PR:
+- https://github.com/remla2025-team16/operation/pull/7 (Related to A5)
+
+Approved RP:
+- No RP to approve.
+
