@@ -70,3 +70,11 @@ istio:
   sticky:
     enabled: true
     cookieName: user-id
+    
+  rateLimit:
+    enabled: true
+    unit: "1m"
+    requestsPerUnit: 10
+    matchHeader: "user-id"
+    rateLimitName: per-user-limit
+
