@@ -14,6 +14,9 @@ Direct commited to 2 repos, activites can be seen from
 - https://github.com/remla2025-team16/lib-ml/blob/main/ACTIVITY.md (Related to A1)\
 - https://github.com/remla2025-team16/model-training/blob/main/ACTIVITY.md (Related to A1)
 
+  Created PR
+- https://github.com/remla2025-team16/lib-ml/pull/1
+
 # Week 3:
 -- Anyan: --
 
@@ -30,6 +33,12 @@ Approved PR:
 -- Gyum: --
 - Configure the second network interface with a static IP; 
 - Disable swap; load br_netfilter; enable IPv4 forwarding;
+- A2 - step 2, 5-8
+  - Commits
+        - [e8ae197](https://github.com/remla2025-team16/operation/commit/e8ae197358049f90c504a2ce3e56f70eae5d61df)
+        - [1b7fd13](https://github.com/remla2025-team16/operation/commit/1b7fd13b2291ce7b3ab9cbe802889e75344d06a1)
+        - [e730e62](https://github.com/remla2025-team16/operation/commit/e730e62216c39e38d1ae18958485015cc842a874)
+        - [5863951](https://github.com/remla2025-team16/operation/commit/5863951553657c4fe3d9f397af2be7639d9814a0)
 
 --pratham--
 
@@ -56,22 +65,25 @@ Approved PR:
 - https://github.com/remla2025-team16/app/pull/3
 
 -- Gyum: --
+Commits 
+    - [fadd18d](https://github.com/remla2025-team16/operation/commit/fadd18ddca32f3f32f37fde059650cfd572537e1)
+    including 5 yaml files. 
+-deployment.yaml
 
+-service.yaml
+    
+-ingress.yaml
+    
+-configmap.yaml
+    
+-secret.yaml
 https://github.com/remla2025-team16/operation/activity?ref=main&actor=Gyum-Portfolio
 1. Worked on the security, Convert Docker Compose to Kubernetes YAML files
-deployment.yaml
-
-service.yaml
-
-ingress.yaml
-
-configmap.yaml
-
-secret.yaml
 2. Set up the Kubernetes deployment
 3. Configure Ingress, Services, and Exposures
 
-
+Approved PR:
+- https://github.com/remla2025-team16/lib-ml/pull/4
 
 --pratham--
 
@@ -104,8 +116,15 @@ Approved PR:
 - https://github.com/remla2025-team16/model-training/pull/4
 
 -- Gyum --
+Commits 
+- [7186a6b](https://github.com/remla2025-team16/operation/commit/7186a5b2e29bdb997a3e822fe18635f73db6e4a5)
+- [9fef134](https://github.com/remla2025-team16/model-service/commit/9fef1342ac30c9ea52808a4d0a95db387b4ca06f)
+- [ededb1c](https://github.com/remla2025-team16/lib-ml/commit/ededb1c310759581cbbbe6ac751a412a9ce216ed)
+- [dae92dd](https://github.com/remla2025-team16/lib-ml/commit/dae92dd4f7430bd85fc9d0f271cd06d5db60a024)
+- [0f3eaa2](https://github.com/remla2025-team16/lib-version/commit/0f3eaa270ffb628e4bf8ad0a57345de3625d28c2)
+
 Aprroved PR:
-- https://github.com/remla2025-team16/lib-ml/pull/4
+- https://github.com/remla2025-team16/lib-ml/pull/6
 
 I mainly worked for clean up the Legacy codes from 2 left members. 
 Only for this activity I lean on commits than folks and merge it. It will never repeat
@@ -120,4 +139,15 @@ Created PR:
 
 Approved RP:
 - No RP to approve.
+
+-- Gyum --
+Created PR: 
+- https://github.com/remla2025-team16/app/pull/4
+
+Approved RP:
+- https://github.com/remla2025-team16/operation/pull/8
+- https://github.com/remla2025-team16/operation/pull/7
+
+Commit & review conflit 
+[22baaf7](https://github.com/remla2025-team16/app/commit/22baaf7fe7c9b747516e5fe76ee76133a595631c)
 
