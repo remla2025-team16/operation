@@ -34,11 +34,15 @@ Approved PR:
 - Configure the second network interface with a static IP; 
 - Disable swap; load br_netfilter; enable IPv4 forwarding;
 - A2 - step 2, 5-8
-  - Commits
+    - Commits
         - [e8ae197](https://github.com/remla2025-team16/operation/commit/e8ae197358049f90c504a2ce3e56f70eae5d61df)
+  
         - [1b7fd13](https://github.com/remla2025-team16/operation/commit/1b7fd13b2291ce7b3ab9cbe802889e75344d06a1)
+  
         - [e730e62](https://github.com/remla2025-team16/operation/commit/e730e62216c39e38d1ae18958485015cc842a874)
+  
         - [5863951](https://github.com/remla2025-team16/operation/commit/5863951553657c4fe3d9f397af2be7639d9814a0)
+    
 
 --pratham--
 
@@ -116,11 +120,16 @@ Approved PR:
 - https://github.com/remla2025-team16/model-training/pull/4
 
 -- Gyum --
+
 Commits 
 - [7186a6b](https://github.com/remla2025-team16/operation/commit/7186a5b2e29bdb997a3e822fe18635f73db6e4a5)
+  
 - [9fef134](https://github.com/remla2025-team16/model-service/commit/9fef1342ac30c9ea52808a4d0a95db387b4ca06f)
+
 - [ededb1c](https://github.com/remla2025-team16/lib-ml/commit/ededb1c310759581cbbbe6ac751a412a9ce216ed)
+  
 - [dae92dd](https://github.com/remla2025-team16/lib-ml/commit/dae92dd4f7430bd85fc9d0f271cd06d5db60a024)
+  
 - [0f3eaa2](https://github.com/remla2025-team16/lib-version/commit/0f3eaa270ffb628e4bf8ad0a57345de3625d28c2)
 
 Aprroved PR:
@@ -141,6 +150,7 @@ Approved RP:
 - No RP to approve.
 
 -- Gyum --
+
 Created PR: 
 - https://github.com/remla2025-team16/app/pull/4
 
