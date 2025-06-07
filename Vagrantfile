@@ -1,13 +1,20 @@
-# -*- mode: ruby -*-
-# vi: set ft=ruby :
+
+workers = ENV.fetch("WORKERS", 2).to_i
+cpu_ctrl = ENV.fetch("CPU_CTRL", "2")
+mem_ctrl = ENV.fetch("MEM_CTRL", "4096")
+cpu_node = ENV.fetch("CPU_NODE", "2")
+mem_node = ENV.fetch("MEM_NODE", "6144")
+
+
+inventory = "[ctrl]\nctrl ansible_host=192.168.56.100 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/ctrl/virtualbox/private_key\n\n[nodes]\n"
+(1..workers).each do |i|
+  inventory += "node-#{ i } ansible_host=192.168.56.#{100 + i} ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/node-#{ i }/virtualbox/private_key\n"
+end
+
+File.write("ansible/inventory.cfg", inventory)
 
 Vagrant.configure("2") do |config|
   # Configurable environment variables
-  workers = ENV.fetch("WORKERS", 2).to_i
-  cpu_ctrl = ENV.fetch("CPU_CTRL", "1")
-  mem_ctrl = ENV.fetch("MEM_CTRL", "4096")
-  cpu_node = ENV.fetch("CPU_NODE", "2")
-  mem_node = ENV.fetch("MEM_NODE", "6144")
 
   # Base box setup
   config.vm.box = "bento/ubuntu-24.04"
@@ -47,20 +54,4 @@ Vagrant.configure("2") do |config|
     ansible.extra_vars = { "num_workers" => workers }
   end
 
-  # Generate dynamic Ansible inventory
-  config.trigger.after :up do |trigger|
-    trigger.name = "Generate Ansible Inventory"
-    trigger.run = {
-      inline: <<-SHELL
-        mkdir -p ansible
-        echo "[ctrl]" > ansible/inventory.cfg
-        echo "ctrl ansible_host=192.168.56.100 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/ctrl/virtualbox/private_key" >> ansible/inventory.cfg
-        echo "" >> ansible/inventory.cfg
-        echo "[nodes]" >> ansible/inventory.cfg
-        for i in $(seq 1 #{workers}); do
-          echo "node-${i} ansible_host=192.168.56.$((100 + i)) ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/node-${i}/virtualbox/private_key" >> ansible/inventory.cfg
-        done
-      SHELL
-    }
-  end
 end
