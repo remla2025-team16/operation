@@ -1,35 +1,66 @@
-Vagrant.configure("2") do |config|
-  workers = ENV.fetch("WORKERS", 2).to_i
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
 
-  # control node definition
+Vagrant.configure("2") do |config|
+  # Configurable environment variables
+  workers = ENV.fetch("WORKERS", 2).to_i
+  cpu_ctrl = ENV.fetch("CPU_CTRL", "1")
+  mem_ctrl = ENV.fetch("MEM_CTRL", "4096")
+  cpu_node = ENV.fetch("CPU_NODE", "2")
+  mem_node = ENV.fetch("MEM_NODE", "6144")
+
+  # Base box setup
+  config.vm.box = "bento/ubuntu-24.04"
+  config.vm.box_version = "202502.21.0"
+
+  # Controller definition
   config.vm.define "ctrl" do |ctrl|
-    ctrl.vm.box = "bento/ubuntu-24.04"
     ctrl.vm.hostname = "ctrl"
-    ctrl.vm.network "private_network", ip: "192.168.56.100", virtualbox__intnet: "cluster"
+    ctrl.vm.network "private_network", ip: "192.168.56.100"
     ctrl.vm.provider "virtualbox" do |vb|
-      vb.memory = 4096
-      vb.cpus = 2
+      vb.memory = mem_ctrl
+      vb.cpus = cpu_ctrl
+    end
+    ctrl.vm.provision :ansible_local do |ansible|
+      ansible.playbook = "/vagrant/ansible/ctrl.yaml"
     end
   end
 
-  # worker definitions
+  # Worker nodes definition
   (1..workers).each do |i|
     config.vm.define "node-#{i}" do |node|
-      node.vm.box = "bento/ubuntu-24.04"
       node.vm.hostname = "node-#{i}"
-      node.vm.network "private_network", ip: "192.168.56.#{100 + i}", virtualbox__intnet: "cluster"
+      node.vm.network "private_network", ip: "192.168.56.#{100 + i}"
       node.vm.provider "virtualbox" do |vb|
-        vb.memory = 6144
-        vb.cpus = 2
+        vb.memory = mem_node
+        vb.cpus = cpu_node
+      end
+      node.vm.provision :ansible_local do |ansible|
+        ansible.playbook = "/vagrant/ansible/node.yaml"
       end
     end
   end
-  
-  # Provisioning
-  config.vm.provision "ansible" do |ansible|
-    ansible.playbook = "ansible/site.yaml"
-    ansible.inventory_path = "ansible/inventory.cfg"
-    ansible.extra_vars = { "workers": workers }
-    ansible.limit = "all"
+
+  # General provisioning
+  config.vm.provision :ansible_local do |ansible|
+    ansible.playbook = "/vagrant/ansible/general.yaml"
+    ansible.extra_vars = { "num_workers" => workers }
+  end
+
+  # Generate dynamic Ansible inventory
+  config.trigger.after :up do |trigger|
+    trigger.name = "Generate Ansible Inventory"
+    trigger.run = {
+      inline: <<-SHELL
+        mkdir -p ansible
+        echo "[ctrl]" > ansible/inventory.cfg
+        echo "ctrl ansible_host=192.168.56.100 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/ctrl/virtualbox/private_key" >> ansible/inventory.cfg
+        echo "" >> ansible/inventory.cfg
+        echo "[nodes]" >> ansible/inventory.cfg
+        for i in $(seq 1 #{workers}); do
+          echo "node-${i} ansible_host=192.168.56.$((100 + i)) ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/node-${i}/virtualbox/private_key" >> ansible/inventory.cfg
+        done
+      SHELL
+    }
   end
 end
