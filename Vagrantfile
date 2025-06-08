@@ -1,10 +1,8 @@
-
 workers = ENV.fetch("WORKERS", 2).to_i
 cpu_ctrl = ENV.fetch("CPU_CTRL", "2")
 mem_ctrl = ENV.fetch("MEM_CTRL", "4096")
 cpu_node = ENV.fetch("CPU_NODE", "2")
 mem_node = ENV.fetch("MEM_NODE", "6144")
-
 
 inventory = "[ctrl]\nctrl ansible_host=192.168.56.100 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/ctrl/virtualbox/private_key\n\n[nodes]\n"
 (1..workers).each do |i|
@@ -14,7 +12,12 @@ end
 File.write("ansible/inventory.cfg", inventory)
 
 Vagrant.configure("2") do |config|
-  # Configurable environment variables
+
+  # General provisioning
+  config.vm.provision :ansible_local do |ansible|
+    ansible.playbook = "/vagrant/ansible/general.yaml"
+    ansible.extra_vars = { "num_workers" => workers }
+  end
 
   # Base box setup
   config.vm.box = "bento/ubuntu-24.04"
@@ -47,11 +50,4 @@ Vagrant.configure("2") do |config|
       end
     end
   end
-
-  # General provisioning
-  config.vm.provision :ansible_local do |ansible|
-    ansible.playbook = "/vagrant/ansible/general.yaml"
-    ansible.extra_vars = { "num_workers" => workers }
-  end
-
 end

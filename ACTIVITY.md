@@ -152,12 +152,19 @@ Approved RP:
 -- Gyum --
 
 Created PR: 
-- https://github.com/remla2025-team16/app/pull/4
+- https://github.com/remla2025-team16/app/pull/4 Related to a5)
 
-Approved RP:
-- https://github.com/remla2025-team16/operation/pull/8
-- https://github.com/remla2025-team16/operation/pull/7
+Approved PR:
+- https://github.com/remla2025-team16/operation/pull/8 (Related to a5)
+- https://github.com/remla2025-team16/operation/pull/7 (Related to a5)
 
 Commit & review conflit 
-[22baaf7](https://github.com/remla2025-team16/app/commit/22baaf7fe7c9b747516e5fe76ee76133a595631c)
+[22baaf7](https://github.com/remla2025-team16/app/commit/22baaf7fe7c9b747516e5fe76ee76133a595631c) 
 
+
+-- Pratham -- 
+Created PR:
+ - https://github.com/remla2025-team16/operation/pull/8 (Related to a5)
+
+ Approved PR
+ - https://github.com/remla2025-team16/app/pull/4 (Related to a5)
