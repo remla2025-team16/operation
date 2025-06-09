@@ -56,7 +56,7 @@ serviceMonitor:
 istio:
   gateway:
     name: my-gateway
-    namespace: test-istio # default
+    namespace: default
     port: 80
     host: "*"
   
@@ -72,7 +72,7 @@ istio:
     cookieName: user-id
     
   rateLimit:
-    enabled: true
+    enabled: false # true
     unit: "1m"
     requestsPerUnit: 10
     matchHeader: "user-id"
