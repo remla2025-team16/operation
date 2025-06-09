@@ -1,8 +1,8 @@
 workers = ENV.fetch("WORKERS", 2).to_i
-cpu_ctrl = ENV.fetch("CPU_CTRL", "2")
-mem_ctrl = ENV.fetch("MEM_CTRL", "4096")
-cpu_node = ENV.fetch("CPU_NODE", "2")
-mem_node = ENV.fetch("MEM_NODE", "6144")
+cpu_ctrl = ENV.fetch("CPU_CTRL", "2").to_i
+mem_ctrl = ENV.fetch("MEM_CTRL", "4096").to_i
+cpu_node = ENV.fetch("CPU_NODE", "2").to_i
+mem_node = ENV.fetch("MEM_NODE", "6144").to_i
 
 inventory = "[ctrl]\nctrl ansible_host=192.168.56.100 ansible_user=vagrant ansible_ssh_private_key_file=.vagrant/machines/ctrl/virtualbox/private_key\n\n[nodes]\n"
 (1..workers).each do |i|
