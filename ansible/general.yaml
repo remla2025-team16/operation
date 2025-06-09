@@ -2,18 +2,25 @@
 - name: Setup base
   hosts: all
   become: true
-  vars:
-    ssh_key_files:
-      - "../keys/anyan.pub"
-      # add more keys here
 
   tasks:
-    - name: Register SSH keys
+    - name: Ensure key file exists
+      stat:
+        path: "{{ item }}"
+      register: key_file
+      loop:
+        - "../keys/anyan.pub"
+        - "../keys/pratham.pub"
+        #add keys here
+
+    - name: Register keys that exist
       ansible.posix.authorized_key:
         user: vagrant
-        key: "{{ lookup('file', item) }}"
         state: present
-      loop: "{{ ssh_key_files }}"
+        key: "{{ lookup('file', item.item) }}"
+      loop: "{{ key_file.results | selectattr('stat.exists', 'defined') | selectattr('stat.exists') | list }}"
+      loop_control:
+        label: "{{ item.item }}"
 
     - name: STEP 5 - Disable swap
       shell: swapoff -a
@@ -57,7 +64,7 @@
       ansible.builtin.apt:
         update_cache: yes
 
-    - name: Install Dependencies #making sure all dependencies are installed 
+    - name: Install Dependencies #making sure all dependencies are installed
       ansible.builtin.apt:
         name:
           - apt-transport-https
@@ -75,7 +82,7 @@
 
     - name: Add Kubernetes APT key
       ansible.builtin.apt_key:
-        url: https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key 
+        url: https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key
         keyring: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
         state: present
 
@@ -127,7 +134,7 @@
       lineinfile:
         path: /etc/containerd/config.toml
         regexp: '^\s*disable_apparmor\s*='
-        line: '      disable_apparmor = true'
+        line: "      disable_apparmor = true"
         insertafter: '^\[plugins\."io.containerd.grpc.v1.cri"\]'
       notify: Restart containerd
 
@@ -147,13 +154,13 @@
         block: |
           SystemdCgroup = true
       notify: Restart containerd
-    
+
     - name: Enable and start kubelet
       ansible.builtin.service:
         name: kubelet
         enabled: yes
         state: started
-    
+
   handlers:
     - name: Restart containerd
       ansible.builtin.service:
