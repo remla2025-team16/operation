@@ -1,32 +1,41 @@
 ---
-- name: Configure and Join Kubernetes Worker Nodes
-  hosts: nodes
+- hosts: nodes
   become: true
-  gather_facts: yes
+  gather_facts: no
+  vars:
+    apiserver_ip:         192.168.56.100
+
+  pre_tasks:
+    - name: Wait for the control-plane API server
+      wait_for:
+        host: "{{ apiserver_ip }}"
+        port: 6443
+        state: started
+        timeout: 300
+      delegate_to: "{{ groups['ctrl'][0] }}"
+      run_once: true
+
+    - name: Get the kubernetes join command
+      command: kubeadm token create --print-join-command --kubeconfig=/etc/kubernetes/admin.conf
+      delegate_to: "{{ groups['ctrl'][0] }}"
+      run_once: true
+      register: join_command
+      retries: 10
+      delay: 5
+      until: join_command.stdout is match("kubeadm join")
 
   tasks:
-    - name: Check if node has already successfully joined the cluster
+    - name: Check if node has already joined
       stat:
         path: /etc/kubernetes/kubelet.conf
       register: kubelet_conf_status
 
-    - name: Get Kubernetes join command from controller
-      command: kubeadm token create --print-join-command
-      delegate_to: "{{ groups['ctrl'][0] }}"
-      run_once: true 
-      register: join_command
-      when: not kubelet_conf_status.stat.exists
-
-
     - name: Join the Kubernetes cluster as a worker node
-      ansible.builtin.shell:
-        cmd: "{{ join_command.stdout }}"
+      shell: "{{ join_command.stdout }}"
       args:
         creates: /etc/kubernetes/kubelet.conf
       register: join_output
-      when: not kubelet_conf_status.stat.exists 
-
-    - name: Display kubeadm join output (if applicable)
-      debug:
-        var: join_output.stdout_lines
-      when: join_output.changed is defined and join_output.changed 
+      retries: 10
+      delay: 15
+      until: join_output.rc == 0
+      when: not kubelet_conf_status.stat.exists
