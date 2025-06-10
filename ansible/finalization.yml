@@ -1,49 +1,90 @@
 ---
-- hosts: ctrl
-  become: yes
+- name: Finalize Kubernetes cluster setup
+  hosts: ctrl
+  become: true
+  gather_facts: false
+
+  vars:
+    manifest_base: /vagrant/ansible/files
+    
+    istio_version: "1.25.2"
+    istio_archive: "istio-{{ istio_version }}-linux-amd64.tar.gz"
+    istio_url: "https://github.com/istio/istio/releases/download/{{ istio_version }}/{{ istio_archive }}"
+    istio_install_dir: "/opt/istio-{{ istio_version }}"
+
+    apiserver_ip:         192.168.56.100
 
   tasks:
+  - name: Wait for the control-plane API server
+    wait_for:
+      host: "{{ apiserver_ip }}"
+      port: 6443
+      state: started
+      timeout: 300
+    delegate_to: "{{ groups['ctrl'][0] }}"
+    run_once: true
+
   # Step 20
-  - name: Install MetalLB core manifests
-    ansible.builtin.command: >
-      kubectl apply
-      -f https://raw.githubusercontent.com/metallb/metallb/v0.14.9/config/manifests/metallb-native.yaml
-    args:
-      creates: /var/lib/metallb.installed
+  - name: Install MetalLB native manifest
+    command: kubectl apply --validate=false -f {{ manifest_base }}/metallb/metallb-native-0.14.9.yml --kubeconfig=/etc/kubernetes/admin.conf --request-timeout=30s
+    delegate_to: "{{ groups['ctrl'][0] }}"
+    register: metallb_install
+    retries: 20
+    delay: 5
+    until: metallb_install.rc == 0
+    run_once: true
 
-  - name: Wait for MetalLB controller
-    ansible.builtin.command: >
-      kubectl wait -n metallb-system
-      --for=condition=ready
-      -l app=metallb,component=controller
-      pod --timeout=60s
-    changed_when: false
+  - name: Wait for MetalLB controller to be ready
+    become_user: vagrant
+    shell: |
+      kubectl wait -n metallb-system -l app=metallb,component=controller --for=condition=ready pod --timeout=60s
+    register: wait_result
+    retries: 20
+    delay: 2
+    until: wait_result.rc == 0
+    run_once: true
 
-  - name: Declare address IPAddressPool
-    kubernetes.core.k8s:
-      kubeconfig: /home/vagrant/.kube/config
-      state: present
-      definition:
+  - name: Create IPAddressPool for MetalLB
+    copy:
+      dest: /tmp/metallb-ipaddresspool.yml
+      content: |
         apiVersion: metallb.io/v1beta1
         kind: IPAddressPool
-        metadata: 
-          name: remla-pool
+        metadata:
+          name: first-pool
           namespace: metallb-system
         spec:
-          addresses: ["192.168.56.90-192.168.56.99"]
+          addresses:
+          - 192.168.56.90-192.168.56.99
 
-  - name: Enable L2 advertisement
-    kubernetes.core.k8s:
-      kubeconfig: /home/vagrant/.kube/config
-      state: present
-      definition:
+  - name: Apply IPAddressPool
+    become_user: vagrant
+    shell: |
+      kubectl apply -f /tmp/metallb-ipaddresspool.yml
+    register: pool_output
+
+  - name: Display IPAddressPool creation output
+    debug:
+      var: pool_output.stdout_lines
+    when: pool_output.changed
+
+  - name: Create L2Advertisement for MetalLB
+    copy:
+      dest: /tmp/metallb-l2advertisement.yml
+      content: |
         apiVersion: metallb.io/v1beta1
         kind: L2Advertisement
-        metadata: 
-          name: remla-adv
+        metadata:
+          name: example
           namespace: metallb-system
         spec:
-          ipAddressPools: ["remla-pool"]
+          ipAddressPools:
+          - first-pool
+
+  - name: Apply L2Advertisement
+    become_user: vagrant
+    shell: |
+      kubectl apply -f /tmp/metallb-l2advertisement.yml
 
   # Step 21
   - name: Ensure ingress-nginx repo exists
@@ -122,3 +163,32 @@
                         port: 
                           number: 443
 
+  # Step 23 Install Istio
+  - name: Download Istio archive
+    get_url:
+      url: "{{ istio_url }}"
+      dest: "/tmp/{{ istio_archive }}"
+
+  - name: Extract Istio into /opt
+    unarchive:
+      src: "/tmp/{{ istio_archive }}"
+      dest: /opt
+      remote_src: yes
+
+  - name: Symlink istioctl into system PATH
+    file:
+      src: "{{ istio_install_dir }}/bin/istioctl"
+      dest: /usr/local/bin/istioctl
+      state: link
+      mode: '0755'
+
+  - name: Install Istio default profile
+    command: istioctl install -y --skip-confirmation
+    environment:
+      PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+
+  - name: (Optional) Apply custom IstioOperator configuration
+    k8s:
+      state: present
+      definition: "{{ lookup('file', 'files/istio-operator.yaml') }}"
+    when: lookup('file', 'files/istio-operator.yaml', errors='ignore') is not failed
