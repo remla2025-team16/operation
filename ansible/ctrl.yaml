@@ -1,117 +1,62 @@
 - hosts: ctrl
   become: true
+  gather_facts: false
   vars:
-    apiserver_ip: 192.168.56.100
-    pod_network_cidr: 10.244.0.0/16
-
-    k8s_version: v1.32.4                 
-    image_repo:  registry.k8s.io
-    flannel_version: "0.26.7"
-    flannel_iface: "eth1"
-    cri_socket:  unix:///var/run/containerd/containerd.sock
+    apiserver_ip:         192.168.56.100
+    pod_network_cidr:     10.244.0.0/16
+    flannel_iface:        "eth1"
 
   tasks:
-  - name: Ensure containerd is running
-    systemd:
-      name: containerd
-      state: started
-      enabled: yes
-
-  - name: Configure crictl
-    copy:
-      dest: /etc/crictl.yaml
-      content: |
-        runtime-endpoint: "{{ cri_socket }}"
-        image-endpoint:  "{{ cri_socket }}"
-        timeout: 10
-        debug: false
-      mode: 0644
-
-  - name: Pre-pull control-plane images {{ k8s_version }}
-    shell: |
-      kubeadm config images list \
-        --image-repository {{ image_repo }} \
-        --kubernetes-version {{ k8s_version }} |
-      xargs -I {} crictl pull {}
-    args:
-      executable: /bin/bash
-
-  # step 13: Init cluster
+    # 13. Init cluster
   - name: Check if cluster already initialised
     stat:
       path: /etc/kubernetes/admin.conf
     register: kubeconfig
 
-  - name: Render minimal kubeadm-config
-    copy:
-      dest: /tmp/kubeadm-config.yaml
-      content: |
-        apiVersion: kubeadm.k8s.io/v1beta3
-        kind: ClusterConfiguration
-        kubernetesVersion: "{{ k8s_version }}"
-        imageRepository:  "{{ image_repo }}"
-        networking:
-          podSubnet: "{{ pod_network_cidr }}"
-        apiServer:
-          certSANs:
-            - "{{ apiserver_ip }}"
-        ---
-        apiVersion: kubeadm.k8s.io/v1beta3
-        kind: InitConfiguration
-        nodeRegistration:
-          name: ctrl
-          criSocket: "{{ cri_socket }}"
-    when: not kubeconfig.stat.exists
-
   - name: Initialise control plane
-    command: kubeadm init --config /tmp/kubeadm-config.yaml
+    shell: >
+      kubeadm init
+      --apiserver-advertise-address={{ apiserver_ip }}
+      --control-plane-endpoint={{ apiserver_ip }}:6443
+      --node-name=ctrl
+      --pod-network-cidr={{ pod_network_cidr }}
     when: not kubeconfig.stat.exists
     register: init_out
 
-  - name: Wait for API-Server
-    wait_for:
-      host: "{{ apiserver_ip }}"
-      port: 6443
-      state: started
-      timeout: 300
-      delay: 5
+  - name: Debug kubeadm init
+    debug:
+      var: init_out.stdout_lines
+    when: init_out.changed
 
-  # step 14: Setup kubectl 
-  - name: Ensure ~/.kube for vagrant
-    file:
-      path: /home/vagrant/.kube
-      state: directory
-      owner: vagrant
-      group: vagrant
-      mode: 0700
+    # 14. Setup kubectl
+  - name: Ensure kubeconfig for vagrant user
+    block:
+      - file:
+          path: /home/vagrant/.kube
+          state: directory
+          owner: vagrant
+          group: vagrant
+          mode: '0755'
 
-  - name: Copy admin.conf to vagrant user
+      - copy:
+          src: /etc/kubernetes/admin.conf
+          dest: /home/vagrant/.kube/config
+          remote_src: yes
+          owner: vagrant
+          group: vagrant
+          mode: '0600'
+
+      - copy:
+          src: /etc/kubernetes/admin.conf
+          dest: /vagrant/admin.conf
+          remote_src: yes
+          mode: '0644'
+    when: kubeconfig.stat.exists or init_out.changed
+
+    # 15. Pod network (Flannel)
+  - name: Copy local Flannel manifest
     copy:
-      src: /etc/kubernetes/admin.conf
-      dest: /home/vagrant/.kube/config
-      owner: vagrant
-      group: vagrant
-      mode: 0644
-      remote_src: yes
-
-  - name: Add KUBECONFIG to .bashrc (idempotent)
-    lineinfile:
-      path: /home/vagrant/.bashrc
-      line: 'export KUBECONFIG=$HOME/.kube/config'
-      insertafter: EOF
-    become_user: vagrant
-
-  - name: Expose admin.conf for host use
-    copy:
-      src: /etc/kubernetes/admin.conf
-      dest: /vagrant/admin.conf
-      mode: 0644
-      remote_src: yes
-
-  # step 15 Create Pod network 
-  - name: Download Flannel manifest
-    get_url:
-      url: "https://raw.githubusercontent.com/flannel-io/flannel/v{{ flannel_version }}/Documentation/kube-flannel.yml"
+      src: /vagrant/ansible/files/flannel/kube-flannel.yml              
       dest: /tmp/kube-flannel.yml
       mode: 0644
 
@@ -121,24 +66,45 @@
       regexp: '(- --iface=)[^\s]+'
       replace: '\1{{ flannel_iface }}'
 
-  - name: Apply Flannel CNI
-    shell: |
-      kubectl apply -f /tmp/kube-flannel.yml --kubeconfig /etc/kubernetes/admin.conf
-    register: flannel_apply
-    retries: 5
-    delay: 15
-    until: flannel_apply.rc == 0
+  - name: Check if Flannel namespace exists
+    command: kubectl get namespace kube-flannel --kubeconfig=/etc/kubernetes/admin.conf
+    register: flannel_ns
+    failed_when: false
+    changed_when: false
 
-  # step 16 Install Helm 
-  - name: Helm apt key
+  - block:
+      - name: Wait for API Server to be ready
+        wait_for:
+          host: "{{ apiserver_ip }}"
+          port: 6443
+          state: started
+          timeout: 300
+          delay: 5
+        delegate_to: "{{ groups['ctrl'][0] }}"
+        run_once: true
+
+      - name: Apply Flannel CNI manifest
+        shell: >
+          kubectl apply --validate=false
+          -f /tmp/kube-flannel.yml
+          --kubeconfig=/etc/kubernetes/admin.conf
+        register: flannel_out
+        retries: 10
+        delay: 10
+        until: flannel_out.rc == 0
+    when: flannel_ns.rc != 0
+
+    # 16. Install Helm
+  - name: Add Helm apt key & repo
     apt_key:
       url: https://baltocdn.com/helm/signing.asc
       state: present
+    register: helm_key
 
-  - name: Helm repo
+  - name: Add Helm repo
     apt_repository:
-      repo: "deb https://baltocdn.com/helm/stable/debian/ all main"
-      state: present
+      repo: deb https://baltocdn.com/helm/stable/debian/ all main
+    when: helm_key.changed
 
   - name: Install Helm
     apt:
@@ -146,8 +112,8 @@
       state: present
       update_cache: yes
 
-  # step 17 Install Helm Diff
-  - name: Install helm-diff plugin
+    # 17. Install Helm diff plugin
+  - name: Ensure helm-diff plugin is installed
     become: false
     environment:
       HOME: /home/vagrant
