@@ -59,11 +59,6 @@
         src: ../hosts
         dest: /etc/hosts
 
-    # Step 9: Add Kubernetes repository
-    - name: Update apt cache
-      ansible.builtin.apt:
-        update_cache: yes
-
     - name: Install Dependencies #making sure all dependencies are installed
       ansible.builtin.apt:
         name:

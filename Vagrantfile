@@ -33,6 +33,12 @@ Vagrant.configure("2") do |config|
     end
     ctrl.vm.provision :ansible_local do |ansible|
       ansible.playbook = "/vagrant/ansible/ctrl.yaml"
+      ansible.inventory_path = "/vagrant/ansible/inventory.cfg"
+    end
+    ctrl.vm.provision :ansible_local do |ansible|
+      ansible.playbook       = "/vagrant/ansible/finalization.yml"
+      ansible.inventory_path = "/vagrant/ansible/inventory.cfg"
+      ansible.limit          = "ctrl"
     end
   end
 
@@ -47,6 +53,7 @@ Vagrant.configure("2") do |config|
       end
       node.vm.provision :ansible_local do |ansible|
         ansible.playbook = "/vagrant/ansible/node.yaml"
+        ansible.inventory_path = "/vagrant/ansible/inventory.cfg"
       end
     end
   end
