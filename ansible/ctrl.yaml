@@ -11,7 +11,7 @@
   - name: Check if cluster already initialised
     stat:
       path: /etc/kubernetes/admin.conf
-    register: kubeconfig
+    register: kubeconfig_stat
 
   - name: Initialise control plane
     shell: >
@@ -20,13 +20,17 @@
       --control-plane-endpoint={{ apiserver_ip }}:6443
       --node-name=ctrl
       --pod-network-cidr={{ pod_network_cidr }}
-    when: not kubeconfig.stat.exists
+    when: not kubeconfig_stat.stat.exists
     register: init_out
 
-  - name: Debug kubeadm init
-    debug:
-      var: init_out.stdout_lines
-    when: init_out.changed
+  - name: Verify cluster is ready
+    block:
+      - name: Check admin.conf exists
+        ansible.builtin.stat:
+          path: /etc/kubernetes/admin.conf
+        register: cluster_ready
+        until: cluster_ready.stat.exists
+    when: init_out is succeeded or kubeconfig_stat.stat.exists
 
     # 14. Setup kubectl
   - name: Ensure kubeconfig for vagrant user
@@ -51,12 +55,12 @@
           dest: /vagrant/admin.conf
           remote_src: yes
           mode: '0644'
-    when: kubeconfig.stat.exists or init_out.changed
+    when: kubeconfig_stat.stat.exists or init_out.changed
 
     # 15. Pod network (Flannel)
   - name: Copy local Flannel manifest
     copy:
-      src: /vagrant/ansible/files/flannel/kube-flannel.yml              
+      src: "{{ playbook_dir }}/files/flannel/kube-flannel.yml"     
       dest: /tmp/kube-flannel.yml
       mode: 0644
 

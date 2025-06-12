@@ -1,0 +1,11 @@
+- name: 1. generatl setup
+  import_playbook: general.yaml
+
+- name: 2. Controller setup
+  import_playbook: ctrl.yaml
+
+- name: 3. Join worker nodes to the cluster
+  import_playbook: node.yaml
+
+- name: 4. Finalize cluster setup
+  import_playbook: finalization.yaml
