@@ -175,7 +175,7 @@ Created PR:
 -- Pratham --
 
 Created PR: 
- - https://github.com/remla2025-team16/operation/pull/9
+ - https://github.com/remla2025-team16/operation/pull/9 (Related to a2)
 
 Approved PR:
- - https://github.com/remla2025-team16/operation/pull/10
+ - https://github.com/remla2025-team16/operation/pull/10 (Related to a2)
