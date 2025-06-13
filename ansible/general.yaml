@@ -4,24 +4,6 @@
   become: true
 
   tasks:
-    - name: Ensure key file exists
-      stat:
-        path: "{{ item }}"
-      register: key_file
-      loop:
-        - "../keys/anyan.pub"
-        - "../keys/pratham.pub"
-        #add keys here
-
-    - name: Register keys that exist
-      ansible.posix.authorized_key:
-        user: vagrant
-        state: present
-        key: "{{ lookup('file', item.item) }}"
-      loop: "{{ key_file.results | selectattr('stat.exists', 'defined') | selectattr('stat.exists') | list }}"
-      loop_control:
-        label: "{{ item.item }}"
-
     - name: STEP 5 - Disable swap
       shell: swapoff -a
 
