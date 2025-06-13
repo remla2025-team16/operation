@@ -183,7 +183,8 @@ Approved PR:
 -- Gyum -- 
 
 Created PR:
-  - https://github.com/remla2025-team16/app/pull/5 (Related to a5, including changes in all API document that not present in the link) 
+  - https://github.com/remla2025-team16/app/pull/5 (Related to a5, including changes in all API document that not present in the link)
+  - https://github.com/remla2025-team16/model-service/blob/main/model_service.py (not a PR but with dependency issues, it is not visible in the PR changes) 
 
 Approved PR:
   - https://github.com/remla2025-team16/operation/pull/11 (Related to a2)
