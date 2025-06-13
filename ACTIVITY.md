@@ -182,7 +182,10 @@ Approved PR:
 
 -- Gyum -- 
 Created PR:
-- https://github.com/remla2025-team16/app/pull/5
+  - https://github.com/remla2025-team16/app/pull/5
+
+Approved PR:
+  - https://github.com/remla2025-team16/operation/pull/11
 
 
 
