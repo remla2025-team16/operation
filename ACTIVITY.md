@@ -179,3 +179,10 @@ Created PR:
 
 Approved PR:
  - https://github.com/remla2025-team16/operation/pull/10 (Related to a2)
+
+-- Gyum -- 
+Created PR:
+- https://github.com/remla2025-team16/app/pull/5
+
+
+
