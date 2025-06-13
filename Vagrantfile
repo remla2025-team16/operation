@@ -1,6 +1,6 @@
 workers = ENV.fetch("WORKERS", 2).to_i
-cpu_ctrl = ENV.fetch("CPU_CTRL", "2").to_i
-mem_ctrl = ENV.fetch("MEM_CTRL", "4096").to_i
+cpu_ctrl = ENV.fetch("CPU_CTRL", "4").to_i
+mem_ctrl = ENV.fetch("MEM_CTRL", "8192").to_i
 cpu_node = ENV.fetch("CPU_NODE", "2").to_i
 mem_node = ENV.fetch("MEM_NODE", "6144").to_i
 
@@ -11,15 +11,15 @@ end
 
 File.write("ansible/inventory.cfg", inventory)
 
+pub_files  = ["../keys/anyan.pub", "../keys/pratham.pub"]
+public_keys = pub_files
+  .map { |path| File.read(File.expand_path(path, __FILE__)).strip }
+  .join("\n")
+
 Vagrant.configure("2") do |config|
 
-  # General provisioning
-  config.vm.provision :ansible_local do |ansible|
-    ansible.playbook = "/vagrant/ansible/general.yaml"
-    ansible.extra_vars = { "num_workers" => workers }
-  end
-
   # Base box setup
+  config.ssh.insert_key = false
   config.vm.box = "bento/ubuntu-24.04"
   config.vm.box_version = "202502.21.0"
 
@@ -31,9 +31,13 @@ Vagrant.configure("2") do |config|
       vb.memory = mem_ctrl
       vb.cpus = cpu_ctrl
     end
-    ctrl.vm.provision :ansible_local do |ansible|
-      ansible.playbook = "/vagrant/ansible/ctrl.yaml"
-    end
+    ctrl.vm.provision "inject_ssh_keys", type: "shell", run: "once", inline: <<-SHELL
+      mkdir -p /home/vagrant/.ssh
+      echo "#{public_keys}" >> /home/vagrant/.ssh/authorized_keys
+      chmod 700 /home/vagrant/.ssh
+      chmod 600 /home/vagrant/.ssh/authorized_keys
+      chown -R vagrant:vagrant /home/vagrant/.ssh/authorized_keys
+    SHELL
   end
 
   # Worker nodes definition
@@ -45,9 +49,19 @@ Vagrant.configure("2") do |config|
         vb.memory = mem_node
         vb.cpus = cpu_node
       end
-      node.vm.provision :ansible_local do |ansible|
-        ansible.playbook = "/vagrant/ansible/node.yaml"
-      end
+      node.vm.provision "inject_ssh_keys", type: "shell", run: "once", inline: <<-SHELL
+        mkdir -p /home/vagrant/.ssh
+        echo "#{public_keys}" >> /home/vagrant/.ssh/authorized_keys
+        chmod 700 /home/vagrant/.ssh
+        chmod 600 /home/vagrant/.ssh/authorized_keys
+        chown -R vagrant:vagrant /home/vagrant/.ssh/authorized_keys
+      SHELL
     end
+  end
+
+  config.vm.provision "ansible" do |ansible|
+    ansible.playbook = "ansible/main-playbook.yaml"
+    ansible.inventory_path = "ansible/inventory.cfg"
+    ansible.limit = "all"
   end
 end

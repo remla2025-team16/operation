@@ -1,32 +1,50 @@
 ---
-- name: Configure and Join Kubernetes Worker Nodes
-  hosts: nodes
+- hosts: nodes
   become: true
-  gather_facts: yes
+  gather_facts: no
+  vars:
+    apiserver_ip:         192.168.56.100
 
   tasks:
-    - name: Check if node has already successfully joined the cluster
+    - name: Check API server connectivity
+      ansible.builtin.shell:
+        cmd: curl -k https://192.168.56.100:6443/healthz
+      register: api_health_check
+      failed_when: api_health_check.stdout != "ok"
+      changed_when: false
+      retries: 10
+      delay: 5
+      until: api_health_check.stdout == "ok"
+
+    - name: Display API server health status
+      ansible.builtin.debug:
+        msg: "API server health check: {{ api_health_check.stdout }}"
+      when: api_health_check is defined
+
+    # Step 18 - Check if the node is already part of the cluster
+    - name: Check if node is already part of the cluster
       stat:
         path: /etc/kubernetes/kubelet.conf
-      register: kubelet_conf_status
+      register: kubelet_config_exists
 
-    - name: Get Kubernetes join command from controller
+    #Step 18 - Generate the join command
+    - name: Generate Kubernetes join command on controller
       command: kubeadm token create --print-join-command
       delegate_to: "{{ groups['ctrl'][0] }}"
-      run_once: true 
-      register: join_command
-      when: not kubelet_conf_status.stat.exists
+      register: join_cmd
+      when: not kubelet_config_exists.stat.exists
 
-
-    - name: Join the Kubernetes cluster as a worker node
+    # Step 19 - Join the worker node to the cluster
+    - name: Join the Kubernetes cluster
       ansible.builtin.shell:
-        cmd: "{{ join_command.stdout }}"
-      args:
-        creates: /etc/kubernetes/kubelet.conf
-      register: join_output
-      when: not kubelet_conf_status.stat.exists 
+        cmd: "{{ join_cmd.stdout }} -v=5"
+      register: join_result
+      become: true
+      when: not kubelet_config_exists.stat.exists
+      async: 60
+      poll: 5
 
-    - name: Display kubeadm join output (if applicable)
-      debug:
-        var: join_output.stdout_lines
-      when: join_output.changed is defined and join_output.changed 
+    - name: Display join output
+      ansible.builtin.debug:
+        var: join_result.stdout_lines
+      when: join_result is defined

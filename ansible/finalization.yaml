@@ -1,0 +1,215 @@
+---
+- name: Finalize Kubernetes cluster setup
+  hosts: ctrl
+  become: true
+  gather_facts: false
+
+  vars:
+    istio_version: "1.25.2"
+    istio_archive: "istio-{{ istio_version }}-linux-amd64.tar.gz"
+    istio_url: "https://github.com/istio/istio/releases/download/{{ istio_version }}/{{ istio_archive }}"
+    istio_install_dir: "/opt/istio-{{ istio_version }}"
+
+    apiserver_ip:         192.168.56.100
+    kubeconfig:          /etc/kubernetes/admin.conf
+
+  tasks:
+  - name: Check if MetalLB is already installed
+    command: kubectl get ns metallb-system --kubeconfig={{ kubeconfig }}
+    register: metallb_ns
+    failed_when: false
+    changed_when: false
+  
+  - name: Copy MetalLB manifest to control plane
+    ansible.builtin.copy:
+      src: "{{ playbook_dir }}/files/metallb/metallb-native-0.14.9.yml"
+      dest: "/tmp/metallb-native-0.14.9.yml"
+    delegate_to: "{{ groups['ctrl'][0] }}"
+    run_once: true
+      
+  # Step 20
+  - name: Install MetalLB native manifest
+    command: kubectl apply --validate=false -f /tmp/metallb-native-0.14.9.yml --kubeconfig={{ kubeconfig }} --request-timeout=60s
+    delegate_to: "{{ groups['ctrl'][0] }}"
+    register: metallb_install
+    retries: 20
+    delay: 5
+    until: metallb_install.rc == 0
+    run_once: true
+    when: metallb_ns.rc != 0
+  
+  - name: Check API server connectivity
+    ansible.builtin.shell:
+      cmd: curl -k https://192.168.56.100:6443/healthz
+    register: api_health_check
+    failed_when: api_health_check.stdout != "ok"
+    changed_when: false
+    retries: 10
+    delay: 5
+    until: api_health_check.stdout == "ok"
+    
+  - name: Wait for MetalLB controller to be ready
+    shell: >
+      kubectl wait -n metallb-system \
+      -l app=metallb,component=controller \
+      --for=condition=ready pod \
+      --kubeconfig={{ kubeconfig }} \
+      --timeout=60s
+    register: wait_metallb
+    retries: 5
+    delay: 10
+    until: wait_metallb.rc == 0
+    delegate_to: "{{ groups['ctrl'][0] }}"
+    run_once: true
+
+  - name: Create IPAddressPool for MetalLB
+    copy:
+      dest: /tmp/metallb-ipaddresspool.yml
+      content: |
+        apiVersion: metallb.io/v1beta1
+        kind: IPAddressPool
+        metadata:
+          name: first-pool
+          namespace: metallb-system
+        spec:
+          addresses:
+          - 192.168.56.90-192.168.56.99
+
+  - name: Apply IPAddressPool
+    become_user: vagrant
+    shell: |
+      kubectl apply -f /tmp/metallb-ipaddresspool.yml
+    register: pool_output
+    retries: 10
+    delay: 15
+    until: pool_output.rc == 0
+
+  - name: Display IPAddressPool creation output
+    debug:
+      var: pool_output.stdout_lines
+    when: pool_output.changed
+
+  - name: Create L2Advertisement for MetalLB
+    copy:
+      dest: /tmp/metallb-l2advertisement.yml
+      content: |
+        apiVersion: metallb.io/v1beta1
+        kind: L2Advertisement
+        metadata:
+          name: example
+          namespace: metallb-system
+        spec:
+          ipAddressPools:
+          - first-pool
+
+  - name: Apply L2Advertisement
+    become_user: vagrant
+    shell: |
+      kubectl apply -f /tmp/metallb-l2advertisement.yml
+
+  # Step 21
+  - name: Ensure ingress-nginx repo exists
+    ansible.builtin.command: helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+    changed_when: false
+    failed_when: false
+
+  - name: Update local Helm cache
+    ansible.builtin.command: helm repo update
+    changed_when: false
+
+  - name: Install ingress controller
+    ansible.builtin.command: >
+      helm upgrade --install edge-ingress ingress-nginx/ingress-nginx
+      --namespace ingress-nginx --create-namespace
+
+  # Step 22
+  - name: Add Kubernetes Dashboard Helm repo
+    ansible.builtin.command: helm repo add kdash https://kubernetes.github.io/dashboard
+    changed_when: false
+    failed_when: false
+
+  - name: Install dashboard
+    ansible.builtin.command: >
+      helm upgrade --install kdash kdash/kubernetes-dashboard
+      --namespace kdash --create-namespace
+      --set app.ingress.enabled=false
+
+  - name: Admin ServiceAccount and binding
+    kubernetes.core.k8s:
+      kubeconfig: /home/vagrant/.kube/config
+      state: present
+      definition: |
+        apiVersion: v1
+        kind: ServiceAccount
+        metadata:
+          name: dash-admin
+          namespace: kdash
+        ---
+        apiVersion: rbac.authorization.k8s.io/v1
+        kind: ClusterRoleBinding
+        metadata:
+          name: dash-admin-crb
+        subjects:
+          - kind: ServiceAccount
+            name: dash-admin
+            namespace: kdash
+        roleRef:
+          kind: ClusterRole
+          name: cluster-admin
+          apiGroup: rbac.authorization.k8s.io
+
+  - name: Expose dashboard via HTTPS Ingress
+    kubernetes.core.k8s:
+      kubeconfig: /home/vagrant/.kube/config
+      state: present
+      definition:
+        apiVersion: networking.k8s.io/v1
+        kind: Ingress
+        metadata:
+          name: dash-external
+          namespace: kdash
+          annotations:
+            nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+        spec:
+          ingressClassName: nginx
+          rules:
+            - host: dashboard.local
+              http:
+                paths:
+                  - path: /
+                    pathType: Prefix
+                    backend:
+                      service:
+                        name: kdash-kubernetes-dashboard
+                        port: 
+                          number: 443
+
+  # Step 23 Install Istio
+  - name: Download Istio archive
+    get_url:
+      url: "{{ istio_url }}"
+      dest: "/tmp/{{ istio_archive }}"
+
+  - name: Extract Istio into /opt
+    unarchive:
+      src: "/tmp/{{ istio_archive }}"
+      dest: /opt
+      remote_src: yes
+
+  - name: Symlink istioctl into system PATH
+    file:
+      src: "{{ istio_install_dir }}/bin/istioctl"
+      dest: /usr/local/bin/istioctl
+      state: link
+      mode: '0755'
+
+  - name: Install Istio default profile
+    command: istioctl install -y --skip-confirmation
+    environment:
+      PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+
+  - name: (Optional) Apply custom IstioOperator configuration
+    k8s:
+      state: present
+      definition: "{{ lookup('file', 'files/istio-operator.yaml') }}"
+    when: lookup('file', 'files/istio-operator.yaml', errors='ignore') is not failed
