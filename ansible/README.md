@@ -11,5 +11,6 @@
 ```bash
 cd operation/ansible
 export WORKERS= 2      # Number of worker nodes
-vagrant up --provider=virtualbox  # Spin up VMs and run Ansible
+vagrant up --no-proviison
+vagrant provision
 ```
