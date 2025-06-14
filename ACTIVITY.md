@@ -170,7 +170,13 @@ Created PR:
  - https://github.com/remla2025-team16/app/pull/4 (Related to a5)
 
 
-#Week 7
+# Week 7
+-- Anyan --
+Created PR:
+- https://github.com/remla2025-team16/operation/pull/10 (Related to a2)
+- https://github.com/remla2025-team16/operation/pull/11 (Related to a2)
+
+Approved RP:
 
 -- Pratham --
 
