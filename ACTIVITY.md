@@ -190,10 +190,10 @@ Approved PR:
 
 Created PR:
   - https://github.com/remla2025-team16/app/pull/5 (Related to a5, including changes in all API document that not present in the link)
-  - https://github.com/remla2025-team16/model-service/blob/main/model_service.py (not a PR but with dependency issues, it is not visible in the PR changes)
   - https://github.com/remla2025-team16/operation/pull/12 (Relate to a2)
   - https://github.com/remla2025-team16/operation/pull/13 (Relate to a3)
   - https://github.com/remla2025-team16/model-training/pull/6 (Relate to a4)
+  -   - https://github.com/remla2025-team16/model-service/blob/main/model_service.py (file convert problem is not solved) 
 
 Approved PR:
   - https://github.com/remla2025-team16/operation/pull/11 (Related to a2)
