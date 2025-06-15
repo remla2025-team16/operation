@@ -170,7 +170,13 @@ Created PR:
  - https://github.com/remla2025-team16/app/pull/4 (Related to a5)
 
 
-#Week 7
+# Week 7
+-- Anyan --
+Created PR:
+- https://github.com/remla2025-team16/operation/pull/10 (Related to a2)
+- https://github.com/remla2025-team16/operation/pull/11 (Related to a2)
+
+Approved RP:
 
 -- Pratham --
 
@@ -185,7 +191,7 @@ Approved PR:
 Created PR:
   - https://github.com/remla2025-team16/app/pull/5 (Related to a5, including changes in all API document that not present in the link)
   - https://github.com/remla2025-team16/model-service/blob/main/model_service.py (not a PR but with dependency issues, it is not visible in the PR changes)
-  - https://github.com/remla2025-team16/operation/pull/12 (Related to a5) 
+  - https://github.com/remla2025-team16/operation/pull/12 (Relate to a2) 
 
 Approved PR:
   - https://github.com/remla2025-team16/operation/pull/11 (Related to a2)
