@@ -198,5 +198,12 @@ Created PR:
 Approved PR:
   - https://github.com/remla2025-team16/operation/pull/11 (Related to a2)
 
+#Week 8
+
+-- Pratham -- 
+
+Created PR:
+  - https://github.com/remla2025-team16/model-training/pull/7 (related to a4)
+  - 
 
 
