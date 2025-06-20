@@ -193,18 +193,30 @@ Created PR:
   - https://github.com/remla2025-team16/operation/pull/12 (Relate to a2)
   - https://github.com/remla2025-team16/operation/pull/13 (Relate to a3)
   - https://github.com/remla2025-team16/model-training/pull/6 (Relate to a4)
-  -   - https://github.com/remla2025-team16/model-service/blob/main/model_service.py (file convert problem is not solved) 
+  - https://github.com/remla2025-team16/model-service/blob/main/model_service.py (file convert problem is not solved) 
 
 Approved PR:
   - https://github.com/remla2025-team16/operation/pull/11 (Related to a2)
   - https://github.com/remla2025-team16/model-training/pull/7 (related to a4)
 
-#Week 8
+# Week 8
 
 -- Pratham -- 
 
 Created PR:
   - https://github.com/remla2025-team16/model-training/pull/7 (related to a4)
-  - 
+    
+Approved PR:
+  - https://github.com/remla2025-team16/operation/pull/13
+
+# Week 9
+ 
+-- Pratham --
+Created PR:
+ - 
+
+Approved PR:
+ - https://github.com/remla2025-team16/model-training/pull/6 (a4 and a5)
+ - 
 
 
