@@ -214,7 +214,9 @@ Approved PR:
 -- Pratham --
 
 Created PR:
- -  
+ -  https://github.com/remla2025-team16/model-training/pull/8 (related to a4 and a1)
+ -  https://github.com/remla2025-team16/app/pull/6 (related to a1)
+ -  https://github.com/remla2025-team16/operation/pull/14 (related to a5)
 
 Approved PR:
  - https://github.com/remla2025-team16/model-training/pull/6 (a4 and a5)
