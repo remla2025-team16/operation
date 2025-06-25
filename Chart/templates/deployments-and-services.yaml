@@ -92,6 +92,11 @@ metadata:
     {{- if eq .name "app-service" }}
     component: app-service
     {{- end }}
+  {{- if eq .name "app-service"}}
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+  {{- end}}
 spec:
   type: ClusterIP
   selector:
