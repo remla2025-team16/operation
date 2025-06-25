@@ -1,38 +1,44 @@
 services:
   model-service:
     build: ../model-service
-    ports:
-      - "5010:5010"
+    expose:
+      - "5010"
     environment:
       - MODEL_URL=${MODEL_URL}
+    networks:
+      - appnet
   app-frontend:
     build:
       context: ../app/app-frontend
       dockerfile: Dockerfile
-    ports:
-      - '3000:3000'
+    expose:
+      - "3000"
+    networks:
+      - appnet
   app-service:
     build: 
       context: ../app/app-service
       dockerfile: Dockerfile
-    ports:
-      - "8080:8080"
+    expose:
+      - "8080"
     environment:
       - MODEL_SERVICE_URL=${MODEL_SERVICE_URL}
-
-  prometheus:
-    image: prom/prometheus
+    networks:
+      - appnet
+  
+  nginx:
+    image: nginx:alpine
     ports:
-      - "9090:9090"
+      - "80:80" 
+    depends_on:
+      - model-service
+      - app-service
+      - app-frontend
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - appnet
 
-  grafana:
-    image: grafana/grafana
-    ports:
-      - "3001:3000"
-    environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-
+networks:
+  appnet:
+    driver: bridge
