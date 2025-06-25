@@ -220,6 +220,10 @@ Created PR:
 
 Approved PR:
  - https://github.com/remla2025-team16/model-training/pull/6 (a4 and a5)
- - 
+
+
+-- Gyum --
+Approved PR:
+ - https://github.com/remla2025-team16/operation/pull/14
 
 
