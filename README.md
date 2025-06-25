@@ -10,7 +10,7 @@ The Docker Compose file defines the following services:
 
 | Service           | Build Context      | Bound Ports | Environment Variables                         |
 | ----------------- | ------------------ | ----------- | --------------------------------------------- |
-| **model-service** | `../model-service` | `5010:5010` | *(none)*                                      |
+| **model-service** | `../model-service` | `5010:5010` | `MODEL_URL=https://github.com/remla2025-team16/model-training/releases/download/v1.0.0/sentiment-model.pkl`                                     |
 | **app-service**   | `../app-service`   | `8080:8080` | `MODEL_SERVICE_URL=http://model-service:5010` |
 | **app-frontend**      | `../app-frontend`  | `3000:3000` | *(none)*                                      |
 
@@ -51,11 +51,7 @@ The Docker Compose file defines the following services:
    ```
 
 3. **Access the services**:
-
-   * Frontend UI:  [http://localhost:3000](http://localhost:3000)
-   * App Backend:  [http://localhost:8080](http://localhost:8080)
-   * Model API:    [http://localhost:5010/api/model](http://localhost:5010/api/model)
-   * Version API:  [http://localhost:5010/api/version](http://localhost:5010/api/version)
+As required, we only expose frontend to the user at [http://localhost:80](http://localhost:80)
 
 4. **Shut down** all services:
 
