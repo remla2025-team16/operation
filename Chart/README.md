@@ -9,11 +9,19 @@ Before using this Helm Chart, ensure the following prerequisites are met:
 1. **Kubernetes Cluster**: A **running** Kubernetes cluster (e.g., Minikube, Kind, or a cloud provider).
 2. **Helm Installed**: Helm CLI installed on your local machine. You can install Helm by following the [official guide](https://helm.sh/docs/intro/install/).
 3. **kubectl Installed**: Ensure `kubectl` is installed and configured to communicate with your Kubernetes cluster.
-4. **Prometheus Operator Installed**
+4. Start minikube for local testing:
+   ```bash
+   minikube start
+   ```
+5. **Prometheus Operator Installed**
    ```bash
    helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
    helm repo update
    helm install prometheus prometheus-community/kube-prometheus-stack
+   ```
+6. Install Istio and add it to the path following instructions in [official](https://istio.io/latest/docs/setup/install/istioctl/) and run the following command to install Istio in your cluster:
+   ```bash
+   istioctl install
    ```
 
 ## Installation
