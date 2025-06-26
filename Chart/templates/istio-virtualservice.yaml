@@ -46,6 +46,11 @@ spec:
       - destination:
           host: {{ include "my-app.fullname" . }}-app-service
           subset: v1
+        weight: {{ .Values.istio.canary.weightV1 }}
+      - destination:
+          host: {{ include "my-app.fullname" . }}-app-service
+          subset: v2
+        weight: {{ .Values.istio.canary.weightV2 }}
   # app-frontend routing
   {{- if .Values.istio.sticky.enabled }}
   - match:
@@ -64,7 +69,7 @@ spec:
         subset: v1
       weight: {{ .Values.istio.canary.weightV1 }}
   {{- end }}
-  # dault routing
+  # default routing
   - match:
     - uri:
         prefix: "/"
@@ -115,3 +120,8 @@ spec:
       - destination:
           host: {{ include "my-app.fullname" . }}-app-service
           subset: v1
+        weight: {{ .Values.istio.canary.weightV1 }}
+      - destination:
+          host: {{ include "my-app.fullname" . }}-app-service
+          subset: v2
+        weight: {{ .Values.istio.canary.weightV2 }}
