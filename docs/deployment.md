@@ -2,7 +2,7 @@
 
 ## 1. Introduction
 
-Welcome to the team! This document outlines the deployment architecture of our sentiment analysis application. The goal is to provide a conceptual overview of the system's structure, components, and data flow to help new team members get up to speed.
+This document outlines the deployment architecture of our sentiment analysis application. The goal is to provide a conceptual overview of the system's structure, components, and data flow to help new team members get up to speed.
 
 Our system is a multi-tier web application deployed on a Kubernetes cluster, leveraging Istio for advanced traffic management and observability.
 

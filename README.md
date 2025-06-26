@@ -215,6 +215,10 @@ All infrastructure provisioning and Kubernetes setup are defined under [`ansible
    cd ../app/app-service
    docker build -t <your-dockerhub-username>/app-service:latest .
    docker push <your-dockerhub-username>/app-service:latest
+
+   cd ../app/app-service
+   docker build -t <your-dockerhub-username>/app-service:v1.0.0 .
+   docker push <your-dockerhub-username>/app-service:v1.0.0
    ```
 
    ###  Apply Kubernetes Resources
