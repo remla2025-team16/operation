@@ -1,14 +1,17 @@
 apiVersion: networking.istio.io/v1beta1
 kind: DestinationRule
 metadata:
-  name: {{ printf "%s-dr" (include "my-app.fullname" .) }}-app-service
+  name: {{ printf "%s-dr" (include "my-app.fullname" .) }}-app-frontend
   namespace: {{ .Values.istio.gateway.namespace }}
 spec:
-  host: {{ printf "%s-%s" (include "my-app.fullname" .) "app-service" }}
+  host: {{ printf "%s-%s" (include "my-app.fullname" .) "app-frontend" }}
   trafficPolicy:
     loadBalancer:
       consistentHash:
-        httpHeaderName: x-user
+        httpCookie:
+          name: {{ .Values.istio.sticky.cookieName }}
+          path: /
+          ttl: 0s
   subsets:
   - name: v1
     labels:
@@ -16,3 +19,25 @@ spec:
   - name: v2
     labels:
       {{ .Values.istio.app.versionLabelKey }}: v2
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: {{ printf "%s-dr" (include "my-app.fullname" .) }}-app-service
+  namespace: {{ .Values.istio.gateway.namespace }}
+spec:
+  host: {{ printf "%s-%s" (include "my-app.fullname" .) "app-service" }}
+  trafficPolicy:
+    loadBalancer:
+      consistentHash:
+        httpCookie:
+          name: {{ .Values.istio.sticky.cookieName }}
+          path: /
+          ttl: 0s
+  subsets:
+    - name: v1
+      labels:
+        {{ .Values.istio.app.versionLabelKey }}: v1
+    - name: v2
+      labels:
+        {{ .Values.istio.app.versionLabelKey }}: v2

@@ -1,15 +1,52 @@
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: {{ printf "%s-entry" (include "my-app.fullname" .) }}-app-service
+  name: {{ printf "%s-entry" (include "my-app.fullname" .) }}-app-frontend
   namespace: {{ .Values.istio.gateway.namespace }}
 spec:
   gateways:
   - {{ .Values.istio.gateway.name }}
   hosts:
   - {{ quote .Values.istio.gateway.host }}  
-
   http:
+  - name: model-service
+    match:
+      - uri:
+          prefix: "{{ (index .Values.services 0).path }}"
+    route:
+    - destination:
+        host: {{ include "my-app.fullname" . }}-model-service
+  - name: app-service-v1
+    match:
+      - uri:
+          prefix: "{{ (index .Values.services 1).path }}"
+        headers:
+          version:
+            exact: "v1"
+    route:
+      - destination:
+          host: {{ include "my-app.fullname" . }}-app-service
+          subset: v1
+  - name: app-service-v2
+    match:
+      - uri:
+          prefix: "{{ (index .Values.services 1).path }}"
+        headers:
+          version:
+            exact: "v2"
+    route:
+      - destination:
+          host: {{ include "my-app.fullname" . }}-app-service
+          subset: v2
+  - name: app-servic-default
+    match:
+      - uri:
+          prefix: "{{ (index .Values.services 1).path }}"
+    route:
+      - destination:
+          host: {{ include "my-app.fullname" . }}-app-service
+          subset: v1
+  # app-frontend routing
   {{- if .Values.istio.sticky.enabled }}
   - match:
     - uri:
@@ -19,24 +56,62 @@ spec:
           regex: ".*{{ .Values.istio.sticky.cookieName }}=.*"
     route:
     - destination:
-        host: {{ printf "%s-%s" (include "my-app.fullname" .) "app-service" }}
+        host: {{ printf "%s-%s" (include "my-app.fullname" .) "app-frontend" }}
         subset: v2
       weight: {{ .Values.istio.canary.weightV2 }}
     - destination:
-        host: {{ printf "%s-%s" (include "my-app.fullname" .) "app-service" }}
+        host: {{ printf "%s-%s" (include "my-app.fullname" .) "app-frontend" }}
         subset: v1
       weight: {{ .Values.istio.canary.weightV1 }}
   {{- end }}
-
+  # dault routing
   - match:
     - uri:
         prefix: "/"
     route:
     - destination:
-        host: {{ printf "%s-%s" (include "my-app.fullname" .) "app-service" }}
+        host: {{ printf "%s-%s" (include "my-app.fullname" .) "app-frontend" }}
         subset: v1
-      weight: {{ .Values.istio.canary.weightV1 }}
-    - destination:
-        host: {{ printf "%s-%s" (include "my-app.fullname" .) "app-service" }}
-        subset: v2
-      weight: {{ .Values.istio.canary.weightV2 }}
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ include "my-app.fullname" . }}-app-service-mesh
+  namespace: {{ .Values.istio.gateway.namespace }}
+spec:
+  hosts:
+  - {{ include "my-app.fullname" . }}-app-service
+
+  http:
+  - name: mesh-v2
+    match:
+      - uri:
+          prefix: "{{ (index .Values.services 1).path }}"
+        headers:
+          version:
+            exact: "v2"
+    route:
+      - destination:
+          host: {{ include "my-app.fullname" . }}-app-service
+          subset: v2
+
+  - name: mesh-v1
+    match:
+      - uri:
+          prefix: "{{ (index .Values.services 1).path }}"
+        headers:
+          version:
+            exact: "v1"
+    route:
+      - destination:
+          host: {{ include "my-app.fullname" . }}-app-service
+          subset: v1
+
+  - name: mesh-default
+    match:
+      - uri:
+          prefix: "{{ (index .Values.services 1).path }}"
+    route:
+      - destination:
+          host: {{ include "my-app.fullname" . }}-app-service
+          subset: v1

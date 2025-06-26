@@ -27,6 +27,7 @@ spec:
       containers:
         - name: {{ $svcName }}-{{ .name }}
           image: "{{ .image.repository }}:{{ .image.tag | default }}"
+          imagePullPolicy: Always
           ports:
             - containerPort: {{ .containerPort }}
           {{- $root := $ }}
@@ -67,6 +68,7 @@ spec:
       containers:
         - name: {{ .name }}
           image: "{{ .image.repository }}:{{ .image.tag }}"
+          imagePullPolicy: Always
           ports:
             - containerPort: {{ .containerPort }}
           {{- $root := $ }}
