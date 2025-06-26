@@ -59,7 +59,9 @@ If these conditions are satisfied, the new version may be promoted and the traff
 
 ## way to run the grafana, prometheus
 kubectl port-forward svc/monitoring-grafana 3001:80
+
 kubectl port-forward svc/monitoring-kube-prometheus-prometheus 9090:9090
+
 kubectl port-forward -n istio-system svc/istio-ingressgateway 8080:80
 
 In each localhost:port number you can check the status
