@@ -10,15 +10,13 @@ Our system is a multi-tier web application deployed on a Kubernetes cluster, lev
 
 The entire system is orchestrated within a Kubernetes cluster. We use a service mesh (Istio) to manage the interactions between our application's microservices and to expose them to the outside world. The observability stack provides deep insights into the application's behavior and performance.
 
-![High-Level Architecture Diagram]() 
-
-[//]: # (#todo: add image)
+![High-Level Architecture Diagram](images/arch.png) 
 
 The main components are:
 * **Application Services**: The core microservices that make up our application (`app-frontend`, `app-service`, `model-service`).
 * **Kubernetes Cluster**: The underlying container orchestration platform.
 * **Istio Service Mesh**: Manages traffic, security, and observability across services.
-* **Observability Stack**: A suite of tools for monitoring, tracing, and visualization (Prometheus, Grafana, Jaeger, Kiali).
+* **Observability Stack**: A suite of tools for monitoring, tracing, and visualization (Prometheus, Grafana).
 
 ## 3. Kubernetes and Istio Setup
 
