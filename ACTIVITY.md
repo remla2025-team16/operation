@@ -210,7 +210,15 @@ Approved PR:
   - https://github.com/remla2025-team16/operation/pull/13
 
 # Week 9
- 
+-- Anyan --
+Created PR:
++ https://github.com/remla2025-team16/operation/pull/15 (Related to A1)
++ https://github.com/remla2025-team16/operation/pull/17(Related to A5)
+
+Approved PR:
++ https://github.com/remla2025-team16/operation/pull/15
++ https://github.com/remla2025-team16/operation/pull/17
+
 -- Pratham --
 
 Created PR:
