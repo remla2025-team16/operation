@@ -1,0 +1,2 @@
+NAME             STATUS   ROLES           AGE   VERSION   INTERNAL-IP    EXTERNAL-IP   OS-IMAGE         KERNEL-VERSION     CONTAINER-RUNTIME
+docker-desktop   Ready    control-plane   39d   v1.32.2   192.168.65.3   <none>        Docker Desktop   6.10.14-linuxkit   docker://28.0.4

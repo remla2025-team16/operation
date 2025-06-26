@@ -1,0 +1,373 @@
+---
+# Source: my-app/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: myapp-my-app-config
+  labels:
+    app.kubernetes.io/name: "my-app"
+    app.kubernetes.io/instance: "myapp"
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: "Helm"
+data:
+  API_BASE_URL: "http://myapp-my-app-app-service:8080"
+  MODEL_SERVICE_URL: "http://myapp-my-app-model-service:5010"
+  MODEL_URL: "https://github.com/remla2025-team16/model-training/releases/download/v1.0.0/sentiment-model.pkl"
+---
+# Source: my-app/templates/deployments-and-services.yaml
+# --- Service for model-service
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-my-app-model-service
+  labels:
+    app.kubernetes.io/name: "my-app"
+    app.kubernetes.io/instance: "myapp"
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: "Helm"
+spec:
+  type: ClusterIP
+  selector:
+    app: myapp-my-app-model-service
+  ports:
+    - name: http
+      port: 5010
+      targetPort: 5010
+---
+# Source: my-app/templates/deployments-and-services.yaml
+# --- Service for app-service
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-my-app-app-service
+  labels:
+    app.kubernetes.io/name: "my-app"
+    app.kubernetes.io/instance: "myapp"
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: "Helm"
+    component: app-service
+  annotations:
+    sidecar.istio.io/inject: "false"
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+spec:
+  type: ClusterIP
+  selector:
+    app: myapp-my-app-app-service
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+---
+# Source: my-app/templates/deployments-and-services.yaml
+# --- Service for app-frontend
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-my-app-app-frontend
+  labels:
+    app.kubernetes.io/name: "my-app"
+    app.kubernetes.io/instance: "myapp"
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: "Helm"
+spec:
+  type: ClusterIP
+  selector:
+    app: myapp-my-app-app-frontend
+  ports:
+    - name: http
+      port: 3000
+      targetPort: 3000
+---
+# Source: my-app/templates/deployments-and-services.yaml
+# --- Deployment for other services
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-my-app-model-service
+  labels:
+    app.kubernetes.io/name: "my-app"
+    app.kubernetes.io/instance: "myapp"
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: "Helm"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myapp-my-app-model-service
+  template:
+    metadata:
+      labels:
+        app: myapp-my-app-model-service
+    spec:
+      containers:
+        - name: model-service
+          image: "ghcr.io/remla2025-team16/model-service:latest"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5010
+          env:
+            - name: API_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: myapp-my-app-config
+                  key: API_BASE_URL
+            - name: MODEL_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: myapp-my-app-config
+                  key: MODEL_SERVICE_URL
+            - name: MODEL_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: myapp-my-app-config
+                  key: MODEL_URL
+---
+# Source: my-app/templates/deployments-and-services.yaml
+# --- Deployment for app-service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-my-app-app-service-v1
+  labels:
+    app.kubernetes.io/name: "my-app"
+    app.kubernetes.io/instance: "myapp"
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: "Helm"
+    version: v1
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: myapp-my-app-app-service
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: myapp-my-app-app-service
+        version: v1
+    spec:
+      containers:
+        - name: app-service-v1
+          image: "ghcr.io/remla2025-team16/app/app-service:v1.0.0"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: API_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: myapp-my-app-config
+                  key: API_BASE_URL
+            - name: MODEL_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: myapp-my-app-config
+                  key: MODEL_SERVICE_URL
+            - name: MODEL_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: myapp-my-app-config
+                  key: MODEL_URL
+---
+# Source: my-app/templates/deployments-and-services.yaml
+# --- Deployment for app-service
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-my-app-app-service-v2
+  labels:
+    app.kubernetes.io/name: "my-app"
+    app.kubernetes.io/instance: "myapp"
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: "Helm"
+    version: v2
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: myapp-my-app-app-service
+      version: v2
+  template:
+    metadata:
+      labels:
+        app: myapp-my-app-app-service
+        version: v2
+    spec:
+      containers:
+        - name: app-service-v2
+          image: "ghcr.io/remla2025-team16/app/app-service:v2.0.0"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: API_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: myapp-my-app-config
+                  key: API_BASE_URL
+            - name: MODEL_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: myapp-my-app-config
+                  key: MODEL_SERVICE_URL
+            - name: MODEL_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: myapp-my-app-config
+                  key: MODEL_URL
+---
+# Source: my-app/templates/deployments-and-services.yaml
+# --- Deployment for other services
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-my-app-app-frontend
+  labels:
+    app.kubernetes.io/name: "my-app"
+    app.kubernetes.io/instance: "myapp"
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: "Helm"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: myapp-my-app-app-frontend
+  template:
+    metadata:
+      labels:
+        app: myapp-my-app-app-frontend
+    spec:
+      containers:
+        - name: app-frontend
+          image: "ghcr.io/remla2025-team16/app/app-frontend:v2.0.0"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          env:
+            - name: API_BASE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: myapp-my-app-config
+                  key: API_BASE_URL
+            - name: MODEL_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: myapp-my-app-config
+                  key: MODEL_SERVICE_URL
+            - name: MODEL_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: myapp-my-app-config
+                  key: MODEL_URL
+---
+# Source: my-app/templates/istio-destinationrule.yaml
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: myapp-my-app-dr-app-service
+  namespace: default
+spec:
+  host: myapp-my-app-app-service
+  trafficPolicy:
+    loadBalancer:
+      consistentHash:
+        httpHeaderName: x-user
+  subsets:
+  - name: v1
+    labels:
+      version: v1
+  - name: v2
+    labels:
+      version: v2
+---
+# Source: my-app/templates/istio-gateway.yaml
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: my-gateway
+  namespace: default
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+---
+# Source: my-app/templates/servicemonitor.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: myapp-my-app-servicemonitor
+  namespace: default
+  labels:
+    app.kubernetes.io/name: "my-app"
+    app.kubernetes.io/instance: "myapp"
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: "Helm"
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      component: app-service
+  namespaceSelector:
+    matchNames:
+      - default
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 15s
+---
+# Source: my-app/templates/istio-virtualservice.yaml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: myapp-my-app-entry-app-service
+  namespace: default
+spec:
+  gateways:
+  - my-gateway
+  hosts:
+  - "*"  
+
+  http:
+  - match:
+    - uri:
+        prefix: "/"
+      headers:
+        cookie:
+          regex: ".*user-id=.*"
+    route:
+    - destination:
+        host: myapp-my-app-app-service
+        subset: v2
+      weight: 10
+    - destination:
+        host: myapp-my-app-app-service
+        subset: v1
+      weight: 90
+
+  - match:
+    - uri:
+        prefix: "/"
+    route:
+    - destination:
+        host: myapp-my-app-app-service
+        subset: v1
+      weight: 90
+    - destination:
+        host: myapp-my-app-app-service
+        subset: v2
+      weight: 10
